@@ -2,87 +2,162 @@
 
 **Document:** `blackout-city.md`\
 **Project:** Blackout City\
-**Status:** MVP specification\
-**Genre:** Single-player, grid-based city electricity puzzle /
-simulation
+**Status:** MVP specification --- revision 3\
+**Genre:** Single-player, grid-based city electricity puzzle / simulation
 
 ------------------------------------------------------------------------
 
 ## 1. Project Overview
 
 Blackout City is a single-player, grid-based puzzle game in which the
-player restores electricity to a city by strategically placing
-generators beside predefined road networks and deciding which buildings
-should receive power.
+player restores electricity to a city. Each level has a fixed road
+layout, fixed buildings, and a limited inventory of generators. The
+player places generators beside the road networks, chooses which
+buildings to power, and then runs a simulation that evaluates the
+result against the level's objectives.
+
+Each attempt at a level follows three phases:
+
+1.  **Placement phase:** the player places, moves, and removes
+    generators.
+2.  **Activation phase:** the player chooses which buildings to
+    activate, based on the capacity the placement produced.
+3.  **Simulation phase:** an animation plays and the result (objectives,
+    score, stars) is compiled.
 
 The game aims for a clean, accessible, simulation-oriented experience
 inspired by the presentation style of *SimCity BuildIt*, while keeping
 its core gameplay focused on electrical network planning and constraint
 solving.
 
-The player must: - Understand the fixed road layout and its disconnected
-road networks. - Place a limited inventory of generators in valid
-locations. - Connect generators to road networks. - Manage each
-network's generation capacity and building demand. - Choose which
-buildings to activate when available power is insufficient. - Complete
-mandatory objectives and earn up to three stars. - Optionally use a
-custom Constraint Satisfaction Problem (CSP) solver for assistance.
+The player must:
+
+-   Understand the fixed road layout and its disconnected road networks.
+-   Place a limited inventory of generators in valid locations.
+-   Connect generators to road networks through placement.
+-   Manage each network's generation capacity against building demand.
+-   Choose which buildings to activate when capacity is insufficient.
+-   Complete mandatory objectives and earn up to three stars.
+-   Optionally use a custom Constraint Satisfaction Problem (CSP) solver
+    for assistance.
 
 The MVP is single-player and campaign-focused. Roads are predefined and
 cannot be edited by the player.
 
 ## 2. Design Principles
 
-1.  **Readable rules:** Placement, connectivity, and power distribution
-    must have distinct, predictable meanings.
-2.  **Deterministic simulation:** The same level state and player
-    actions must produce the same result.
-3.  **Independent road networks:** Electricity cannot travel between
+1.  **Readable rules:** Placement, connectivity, activation, and
+    evaluation have distinct, predictable meanings.
+2.  **Phase separation:** Each phase allows a specific set of actions.
+    The engine rejects actions that do not belong to the current phase.
+3.  **Deterministic simulation:** The same level state and player
+    actions always produce the same result.
+4.  **Independent road networks:** Electricity cannot travel between
     disconnected road components.
-4.  **No hidden placement penalties:** Valid but disconnected generators
-    are allowed and do not repeatedly trigger error messages.
-5.  **Shared simulation rules:** Gameplay validation and the CSP solver
-    must use the same underlying rules.
-6.  **Data-driven levels:** Campaign levels are stored as structured
-    data so the same format can support a future level editor.
-7.  **MVP simplicity:** Advanced mechanics such as partial power,
-    editable roads, and community levels are deferred.
+5.  **No hidden placement penalties:** Valid but disconnected generators
+    are allowed and do not trigger error messages.
+6.  **Predefined technical values:** Building demand, output, and
+    footprint are fixed per building type. Only score values (and level
+    layout) vary per level.
+7.  **Shared simulation rules:** Gameplay validation and the CSP solver
+    use the same underlying engine code.
+8.  **Presentation never affects rules:** Animations and UI are
+    consumers of engine results; they never change them.
+9.  **Data-driven levels:** Campaign levels are structured JSON so the
+    same format can support a future level editor.
+10. **MVP simplicity:** The MVP favors ease of implementation.
+    Performance optimization, user-experience refinement, and advanced
+    mechanics (power plants, generator rotation, partial power, editable
+    roads, community levels) are deferred to Phase 2.
 
-## 3. Core Game World
+## 3. Game Flow
 
-### 3.1 Grid
+### 3.1 Phases
+
+| Phase | Player actions | Engine responsibilities |
+|----|----|----|
+| **Placement** | Place, move, remove generators; reset level; request solver help; proceed to activation | Validate placement on place and move; run the capacity check after every successful place, move, or remove |
+| **Activation** | Activate and deactivate buildings; reset level; proceed to simulation | Track per-network remaining capacity; determine eligibility; auto-activation where applicable |
+| **Simulation** | None (animation plays) | Compile the result: powered buildings, objectives, score, stars |
+| **Result** | View result; go back; reset | Persist the best result when the level was completed |
+
+### 3.2 Phase transitions
+
+-   Placement → Activation: initiated by the player.
+-   Activation → Simulation: initiated by the player (confirm).
+-   Simulation → Result: automatic when the result is ready.
+-   **Back navigation:** a back button moves the player one phase
+    backwards: Result → Activation, and Activation → Placement.
+    -   Going back from Result to Activation discards the result and
+        keeps the active set. A result already saved as the best result
+        is kept.
+    -   Going back from Activation to Placement clears the active set,
+        because the generator layout may change. Placed generators are
+        kept.
+    -   Back is not available while the Simulation animation plays.
+-   **Reset** is available during Placement and Activation. It unplaces
+    all generators, clears all activation state, and returns the level
+    to its original state in the Placement phase.
+
+### 3.3 Where power state exists
+
+-   During the Placement phase no building is powered. The player only
+    sees the *capacity check* (section 8), which is informational.
+-   Powered/unpowered state exists from the Activation phase onward.
+-   Because generators cannot change during Activation, network
+    generation is constant for the whole Activation phase.
+
+## 4. Core Game World
+
+### 4.1 Grid
 
 Each level is represented by a two-dimensional grid. Every cell has a
 defined role.
 
-Cell/content types: - **Empty:** Unoccupied, unrestricted cell. -
-**Road:** Fixed road cell defined by the level. - **Building:** Fixed
-building footprint defined by the level. - **Restricted terrain:**
-Obstacles such as trees, water, or decorative terrain. - **Generator:**
-Player-placed power source.
+Cell/content types:
+
+-   **Empty:** Unoccupied, unrestricted cell.
+-   **Road:** Fixed road cell defined by the level.
+-   **Building:** Cell belonging to a fixed building footprint.
+-   **Restricted terrain:** Obstacles such as trees, water, or
+    decorative terrain.
+-   **Generator:** Cell belonging to a player-placed generator
+    footprint.
 
 Roads, buildings, and restricted terrain are part of the level layout.
 The player cannot place, remove, move, or connect roads in the MVP.
 
-### 3.2 Orthogonal adjacency
+### 4.2 Coordinates
 
-Orthogonal adjacency means sharing an edge: - Up - Down - Left - Right
+-   Coordinates are `{ x, y }`.
+-   The origin is the top-left cell. `x` is the column and `y` is the
+    row.
+-   A multi-cell footprint is anchored at its top-left cell (`origin`)
+    and extends `width` cells in +x and `height` cells in +y.
+
+### 4.3 Orthogonal adjacency
+
+Orthogonal adjacency means sharing an edge: up, down, left, right.
 
 Diagonal adjacency does not count for road connectivity, building
 connectivity, generator connectivity, or generator placement validation.
 
-### 3.3 Buildings with multiple cells
+### 4.4 Multi-cell footprints
 
-Buildings may occupy multiple cells, such as 1×1 or 2×2 footprints.
+Buildings and generators may occupy multi-cell rectangular footprints
+(for example 1×1, 2×2).
 
-A building is adjacent to a road if at least one cell along its
-footprint boundary is orthogonally adjacent to a road cell. Buildings
-cannot connect directly to other buildings and cannot act as
-intermediate electricity paths.
+The **adjacent cells** of a footprint are the cells that are
+orthogonally adjacent to at least one footprint cell and are *not*
+themselves part of the footprint.
 
-## 4. Road Networks
+A footprint is adjacent to a road if at least one of its adjacent cells
+is a road cell. Buildings cannot connect directly to other buildings and
+cannot act as intermediate electricity paths.
 
-### 4.1 Road components
+## 5. Road Networks
+
+### 5.1 Road components
 
 A road network is a connected component of road cells. Road cells belong
 to the same component when they can be reached from one another through
@@ -90,114 +165,172 @@ orthogonally adjacent road cells.
 
 Each connected road component is an independent electrical network.
 
-### 4.2 Network rules
+### 5.2 Network rules
 
 -   Road-to-road connectivity is orthogonal only.
 -   Diagonal road contact does not connect road cells.
 -   Disconnected road components remain electrically independent.
 -   Buildings and generators do not join separate road components.
 -   Buildings cannot carry electricity from one road network to another.
--   Road components are fixed for the duration of a level because roads
-    cannot be edited.
+-   Road components are fixed for the duration of a level.
 
-### 4.3 Precomputation
+### 5.3 Precomputation
 
-Road components should be calculated once when a level is loaded, using
-BFS or DFS. Each road cell receives a stable `networkId` or component
-identifier.
+Road components are calculated once when a level is loaded, using BFS or
+DFS. Each road cell receives a stable `networkId`.
 
-Because roads are immutable during a level, their component assignments
-do not need to be recalculated after generator or building actions.
+Because roads are immutable during a level, component assignments never
+need recalculation.
 
-## 5. Generator System
+## 6. Building Definitions
 
-### 5.1 Generator properties
+### 6.1 Building variants
 
-A generator is a player-placed power source. Its static definition
-includes at least: - ID - Name - Power output - Any future type-specific
-attributes
+All buildings, including generators, are building variants with static
+properties:
 
-Generator types and available quantities are configured per level.
-Generator output belongs to the generator type definition, not to an
-individual placement.
+-   `id`
+-   `name`
+-   `category`
+-   `width`
+-   `height`
+-   `demand`
+-   `output`
 
-### 5.2 Placement area
+These values are predefined per variant and are **not** configurable per
+level.
 
-A generator can be placed only on an empty, unrestricted cell. It cannot
-occupy: - A road cell - A building cell - Restricted terrain - Another
-generator's cell
+Example categories: `residential`, `commercial`, `hospital`, `factory`,
+and `generator`.
 
-A candidate cell must also pass generator placement validation.
+### 6.2 Fixed buildings
 
-### 5.3 Placement validity and connectivity are separate concepts
+Fixed buildings are part of the level layout.
 
-The game has two placement states: - `valid` - `invalid`
+-   They have `demand > 0` and `output = 0` in the MVP. Level-fixed
+    power-producing buildings (power plants) are deferred to Phase 2.
+-   Each instance in a level has: a unique instance ID, a variant ID, an
+    `origin`, and a `score` value configured for that level instance.
+-   Score is the only per-level configurable property of a building.
 
-Power connectivity is calculated separately: - `connected` -
-`disconnected`
+### 6.3 Generators
 
-A generator can therefore be validly placed while disconnected from a
+A generator is a building variant with `category = "generator"` that the
+player places.
+
+-   `demand = 0` and `output > 0`.
+-   Footprint size and output differ by generator type, for example
+    small generator, generator, big generator, city center generator.
+    The exact set of types and their values is defined in production.
+-   Generators do not need activation. A connected generator contributes
+    its output as soon as it is placed.
+-   Generators have no score value. Score comes only from powered fixed
+    buildings.
+-   Output belongs to the generator *type*, not to an individual
+    placement.
+-   Footprints have a fixed orientation in the MVP. Rotation is
+    deferred to Phase 2.
+
+### 6.4 Building-to-road connectivity
+
+A fixed building is connected to a road network when at least one of its
+adjacent cells (section 4.4) is a road cell.
+
+-   A building adjacent to several road cells of the *same* component is
+    connected to that component.
+-   Diagonal adjacency does not count.
+-   A building without road adjacency cannot receive power.
+-   A building adjacent to more than one distinct road component has an
+    ambiguous network assignment. In the MVP this is prevented during
+    level production, and the load-time validator rejects such levels as
+    a safety net. Revisited in Phase 2.
+
+## 7. Generator System and the Placement Phase
+
+### 7.1 Inventory
+
+-   Generator inventory is defined per level as quantities by generator
+    type.
+-   Placing, moving, and removing generators has no in-game cost.
+-   Moving a generator does not consume an additional generator.
+-   Removing a generator returns it to the available inventory.
+
+### 7.2 Placement area
+
+A generator can be placed only if **every cell** of its footprint:
+
+-   Is inside the grid.
+-   Is empty and unrestricted.
+-   Is not a road cell, building cell, restricted terrain cell, or part
+    of another generator.
+
+A candidate must also pass placement validation (7.4).
+
+### 7.3 Placement validity and connectivity are separate concepts
+
+The game has two placement states: `valid` and `invalid`.
+
+Power connectivity is a separate result: `connected` and `disconnected`.
+
+A generator can therefore be validly placed while disconnected from every
 road network.
 
-### 5.4 Generator placement validation
+### 7.4 Generator placement validation
 
 Only orthogonally adjacent road cells are considered.
 
-For a candidate generator position: 1. Inspect the four orthogonally
-adjacent cells. 2. Collect the distinct road component IDs among those
-cells. 3. Count the distinct component IDs.
+For a candidate generator footprint:
 
-The result is:
+1.  Compute the adjacent cells of the footprint (section 4.4).
+2.  Collect the distinct road component IDs among those cells.
+3.  Count the distinct component IDs.
 
-  ------------------------------------------------------------------------
-   Number of distinct adjacent Placement state       Connectivity
-               road components                       
-  ---------------------------- --------------------- ---------------------
-                             0 Valid                 Disconnected
+| Distinct adjacent road components | Placement state | Connectivity |
+|----|----|----|
+| 0 | Valid | Disconnected |
+| 1 | Valid | Connected |
+| 2 or more | Invalid | Not applicable |
 
-                             1 Valid                 Connected
+Important details:
 
-                     2 or more Invalid               Not applicable
-  ------------------------------------------------------------------------
+-   Count distinct road component IDs, not adjacent road cells.
+-   A generator touching several road cells of the same component is
+    valid and connected.
+-   Diagonal road cells are ignored entirely.
+-   A generator touching two or more distinct road components is
+    invalid. A generator must not bridge separate road systems.
+-   For a 1×1 generator this reduces to inspecting the four orthogonal
+    neighbors.
 
-Important details: - Count distinct road component IDs, not adjacent
-road cells. - If a generator touches multiple road cells belonging to
-the same component, it is still valid and connected. - Diagonal road
-cells are ignored entirely. - A generator touching no road component is
-valid but disconnected. - A generator touching two or more distinct road
-components is invalid, even if it would otherwise be adjacent to both.
+### 7.5 Invalid placement behavior
 
-This is the definitive rule for generator placement. A generator must
-not bridge separate road systems.
+Invalid placements are rejected; invalid generators never remain on the
+board.
 
-### 5.5 Invalid placement behavior
-
-Invalid placements are rejected; invalid generators must never remain on
-the board.
-
--   **Placing a new generator:** Reject the placement. The generator
-    remains available in the toolbar/inventory.
--   **Moving an existing generator:** Reject the move and restore the
-    generator to its previous position.
--   Show a UI toast explaining that a generator cannot touch multiple
+-   **Placing a new generator:** reject the placement. The generator
+    remains in the inventory.
+-   **Moving an existing generator:** reject the move and restore the
+    generator to its previous position. The generator is not removed
+    from its old position unless the new position is valid.
+-   Show a toast explaining that a generator cannot touch multiple
     separate road networks.
 -   Do not show an invalid-placement toast for a valid but disconnected
     generator.
--   Do not commit an invalid placement to game state or run power
-    distribution for it.
+-   Do not commit an invalid placement to game state, and do not run the
+    capacity check for it.
 
-### 5.6 Generator connectivity and power contribution
+When a move is evaluated, the generator's own current footprint is
+ignored when checking overlap, so it may move to a position that
+overlaps its previous one.
 
-A generator is connected when it is orthogonally adjacent to at least
-one road cell belonging to exactly one road component.
+### 7.6 Connectivity and contribution
 
--   A connected generator is assigned to that road component.
+-   A connected generator is assigned to its single adjacent road
+    component and contributes its output to that network.
 -   A disconnected generator has no `networkId` and contributes no
     power.
--   A connected generator contributes its configured output to its
-    assigned network.
--   A generator contributes to exactly one network.
--   Generator output is not duplicated across multiple networks.
+-   A generator contributes to exactly one network. Output is never
+    duplicated across networks.
 
 Suggested status representation:
 
@@ -205,462 +338,496 @@ Suggested status representation:
 type PlacementState = "valid" | "invalid";
 type ConnectivityState = "connected" | "disconnected";
 
-interface GeneratorStatus {
+interface PlacementEvaluation {
   placement: PlacementState;
-  connectivity: ConnectivityState;
+  connectivity: ConnectivityState | null; // null when invalid
   networkId: string | null;
+  reason?:
+    | "out_of_bounds"
+    | "cell_occupied"
+    | "restricted_terrain"
+    | "touches_multiple_networks"
+    | "no_inventory"
+    | "wrong_phase";
 }
 ```
 
-Suggested conceptual calculation:
+### 7.7 Move, remove, and recalculation
 
-``` ts
-const adjacentNetworks = getOrthogonalAdjacentRoadNetworks(generator);
+-   Place, move, and remove are only allowed during the Placement phase.
+-   Moving is a validated operation: evaluate the new position first;
+    only commit if valid.
+-   After every **successful** place, move, or remove, run the capacity
+    check (section 8).
+-   Rejected actions leave state unchanged and do not run the capacity
+    check.
 
-const placement = adjacentNetworks.size <= 1 ? "valid" : "invalid";
-const connectivity =
-  adjacentNetworks.size === 1 ? "connected" : "disconnected";
+### 7.8 Reset
 
-const networkId =
-  adjacentNetworks.size === 1
-    ? [...adjacentNetworks][0]
-    : null;
-```
+Reset unplaces all generators, clears activation state, and returns the
+level to its original state in the Placement phase. All inventory is
+restored. There is no automatic activation after a reset.
 
-The placement operation must reject the generator if
-`placement === "invalid"`.
+### 7.9 Placement preview
 
-### 5.7 Generator movement, removal, and inventory
+The engine must expose a side-effect-free preview evaluation
+(`evaluatePlacement`) so the UI can show hover feedback before the
+player commits. The visual treatment of that feedback is defined in
+Figma; the engine only provides the evaluation result.
 
--   The player may place, move, and remove generators without an in-game
-    cost.
--   Generator inventory is limited by the quantities specified in the
-    level.
--   Moving a generator does not consume an additional generator.
--   Removing a generator returns it to the available inventory.
--   A move or removal can change the capacity of the affected road
-    network and therefore requires power-state recalculation.
--   Moving a generator should be treated as a validated operation: do
-    not permanently remove it from its old position unless the new
-    position is valid.
+## 8. Capacity Check
 
-## 6. Building System
+The capacity check summarizes, per road network, whether the current
+generator layout can power the buildings connected to it.
 
-### 6.1 Building definitions
-
-Building variants have static properties in the MVP: - `id` - `name` -
-`category` - `width` - `height` - `demand` - `output`
-
-Each building instance in a level also has: - A unique instance ID - A
-variant ID - A grid position - A score value configured for that level
-instance
-
-Examples of categories: - Residential - Commercial - Hospital -
-Factory - Power plant
-
-Most buildings have `output = 0`. Power-generating buildings have a
-positive output.
-
-### 6.2 Building-to-road connectivity
-
-A building is connected to a road network when at least one cell on its
-footprint boundary is orthogonally adjacent to a road cell.
-
--   A building can be connected to one or more road cells in the same
-    road component.
--   If a building footprint is adjacent to multiple distinct road
-    components, its network assignment must be explicitly resolved in
-    the level rules before such a layout is used. For the MVP, level
-    validation should preferably reject buildings that touch more than
-    one distinct road component, avoiding ambiguous power assignment.
--   Diagonal adjacency does not count.
--   A building without road adjacency cannot receive power.
-
-### 6.3 Building demand and activation
-
--   A building must receive its full power demand to activate.
--   Partial power is not supported in the MVP.
--   An unpowered building consumes no power and contributes no output.
--   An activated building consumes its configured demand.
--   An activated power-generating building also contributes its
-    configured output.
--   A power-generating building must first be activated using generation
-    already available to its network. It cannot use its own output to
-    satisfy its initial activation demand.
-
-### 6.4 Player-selected activation
-
-When there is insufficient capacity to activate every remaining
-connected building: - The player may choose any eligible connected,
-unpowered building. - A building is eligible when the network has enough
-remaining capacity to satisfy its full demand. - The player is not
-forced to follow a predefined building priority. - If no remaining
-building is eligible, none can be activated until network capacity
-changes.
-
-### 6.5 Automatic activation
-
-When available capacity is sufficient to activate all remaining
-connected buildings, the game automatically activates all of them.
-
-Automatic activation must be deterministic: - Use a stable ordering,
-such as building instance ID, when processing buildings. - Recalculate
-available capacity after each activation. - Recalculate generation after
-activating a power-generating building, because its output becomes
-available only after activation. - Do not use random ordering.
-
-The precise priority policy for automatic activation of power-generating
-buildings is an implementation detail that must be kept deterministic.
-The MVP should use one documented stable ordering consistently in
-gameplay and solver simulation.
-
-## 7. Electrical Simulation
-
-### 7.1 Per-network accounting
-
-Each road component has its own power accounting.
-
-For each network, track at least: - Connected generator output - Output
-from currently activated power-generating buildings - Demand from
-currently activated buildings - Remaining capacity - Connected
-buildings - Powered buildings
-
-A useful accounting model is:
+For each network `n`:
 
 ``` text
-total generation =
-    connected generator output
-  + output from activated power-generating buildings
-
-total consumption =
-    demand from activated buildings
-
-remaining capacity =
-    total generation - total consumption
+generation(n) = sum of output of connected generators assigned to n
+demand(n)     = sum of demand of all fixed buildings connected to n
+surplus(n)    = generation(n) - demand(n)
+canPowerAll(n) = generation(n) >= demand(n)
 ```
 
-Only generators and buildings assigned to that network participate in
-its accounting.
+Rules:
 
-### 7.2 Activation eligibility
+-   The check runs after every successful place, move, or remove, and
+    after reset.
+-   It reports every network, including networks with no generators or
+    no buildings.
+-   It is informational: it never blocks the player, removes anything,
+    or changes state.
+-   A network with `canPowerAll = false` is normal. The Activation phase
+    exists so the player can choose which buildings to power.
 
-A connected, unpowered building can be activated when:
+## 9. Activation Phase
+
+### 9.1 Entering the phase
+
+When the Activation phase begins, no building is active, then
+auto-activation (9.5) is applied. Generator layout is locked for the
+duration of the phase.
+
+### 9.2 Per-network accounting
+
+For each network `n`:
 
 ``` text
-remaining capacity >= building demand
+generation(n)  = as computed by the capacity check (constant in this phase)
+consumption(n) = sum of demand of currently active buildings in n
+remaining(n)   = generation(n) - consumption(n)
 ```
 
-On activation: 1. Subtract the building's demand from available
-capacity. 2. Mark the building as powered. 3. If it is a
-power-generating building, add its output to network generation. 4.
-Recalculate the network's capacity and eligibility.
+### 9.3 Eligibility
 
-A power plant's output must never be counted before that plant has been
-activated.
+A connected, inactive building in network `n` can be activated when:
 
-### 7.3 Network independence
+``` text
+remaining(n) >= building demand
+```
 
--   Power cannot be transferred between disconnected road components.
--   Excess power in one network cannot satisfy demand in another.
--   A generator contributes only to its assigned network.
--   Activation choices and capacity calculations are made independently
-    per network.
+-   A building must receive its full demand to activate. Partial power
+    is not supported in the MVP.
+-   A building without road connectivity can never be activated.
+-   An inactive building consumes nothing.
 
-### 7.4 Generator removal or movement and network reset
+### 9.4 Manual activation and deactivation
 
-After a generator is moved or removed, recalculate the affected network.
+-   The player may activate any eligible building.
+-   The player may deactivate any active building. Deactivation frees
+    its demand as remaining capacity.
+-   The player is not forced to follow a predefined priority.
+-   If no building is eligible, nothing can be activated until the
+    player deactivates something.
 
--   If the remaining generation can support all currently activated
-    buildings, keep their powered states.
--   If the current powered state can no longer be supported, all powered
-    buildings in that affected network turn off and the network's
-    activation state resets.
--   The player can then choose which buildings to activate again when
-    sufficient power is available.
--   If a network loses all connected generators, its powered buildings
-    turn off.
--   Only the affected network resets; other road networks remain
-    unchanged.
+### 9.5 Automatic activation
 
-For an all-or-nothing reset, activated power-generating buildings also
-turn off. Their output is removed when the network resets. Their
-previous output must not be used to keep them active during the reset
-calculation.
+For a network `n` where total demand of all its connected buildings is
+within its generation:
 
-### 7.5 Recalculation triggers
+``` text
+demand(n) <= generation(n)
+```
 
-Recalculate the relevant network when: - A generator is placed. - A
-generator is moved. - A generator is removed. - A building is
-activated. - A building is deactivated as part of a network reset. - Any
-future mechanic changes generation or demand.
+all of its connected buildings are activated automatically, without the
+player selecting them one by one.
 
-Road components themselves do not need recalculation because roads are
-fixed.
+-   Each network is evaluated independently. Auto-activation in one
+    network has no effect on any other network.
+-   A network with `demand(n) > generation(n)` is manual: the player
+    chooses.
+-   The MVP applies it automatically on entering the phase. Whether
+    this is the best trigger (versus an explicit per-network action)
+    will be decided through playtesting, so implement the trigger in a
+    single function that is easy to change.
 
-## 8. Objectives, Score, and Stars
+### 9.6 No activation order
 
-### 8.1 Mandatory objectives
+In the MVP all fixed buildings only consume power. The set of active
+buildings is therefore order-independent: whether a set is affordable
+depends only on the sum of demands. The activation state is the *set* of
+active building instance IDs, not an ordered list.
+
+### 9.7 Leaving the phase
+
+The player confirms to proceed to the Simulation phase. Proceeding is
+allowed regardless of how many buildings are active.
+
+## 10. Simulation Phase
+
+### 10.1 Input
+
+The locked generator layout and the set of active buildings.
+
+### 10.2 Result compilation
+
+The result is compiled by a pure engine function (`runSimulation`) that
+is deterministic and independent of any animation. It produces:
+
+-   Per-network generation, consumption, and remaining capacity.
+-   The final set of powered buildings.
+-   Evaluation of the mandatory objectives, including per-node status of
+    the objective tree.
+-   The score.
+-   Whether the level is completed.
+-   The star rating.
+
+### 10.3 Animation
+
+-   The animation is presentation only. It visualizes the compiled
+    result and must never change it.
+-   Animation design is defined in Figma.
+
+### 10.4 Persistence
+
+If the level was completed, the result is compared with the saved best
+result for that level and saved when it is better (see 12.2). Results
+that do not complete the level are not saved.
+
+## 11. Objectives, Score, and Stars
+
+### 11.1 Mandatory objectives
 
 Mandatory objectives determine whether a level is completed.
 
-Examples: - All buildings powered. - At least two hospitals powered. -
-At least one residential building powered. - Two hospitals AND one
-residential building powered. - Two hospitals OR one residential
-building powered.
+Examples:
+
+-   All buildings powered.
+-   At least two hospitals powered.
+-   At least one residential building powered.
+-   Two hospitals AND one residential building powered.
+-   Two hospitals OR one residential building powered.
 
 Objectives support predefined condition types and nested AND/OR
 combinations.
 
-Objective evaluation can count powered buildings by category or check
-specific building instance IDs.
+Default objective schema (to be refined in production):
 
-### 8.2 Completion
-
-A level is completed when all mandatory objectives are satisfied.
-
-The player does not need to achieve the maximum possible score to
-complete a level.
-
-### 8.3 Score
-
-The score is the sum of the configured score values of currently powered
-buildings:
-
-``` text
-score = sum(score value of each powered building)
+``` ts
+type Objective =
+  | { type: "and"; children: Objective[] }
+  | { type: "or"; children: Objective[] }
+  | { type: "categoryCount"; category: BuildingCategory; min: number }
+  | { type: "buildingPowered"; buildingId: string }
+  | { type: "allBuildingsPowered" };
 ```
 
-Score is based on the final powered state, not merely on buildings
-placed in the level.
+-   `categoryCount` counts powered buildings only, with an "at least"
+    comparison.
+-   `categoryCount` categories come from an enumerated set derived from
+    the building definitions, not free strings.
+-   `allBuildingsPowered` refers to all fixed buildings in the level.
 
-Individual building instance score values can be configured per level.
-Building variant demand, output, and footprint remain static in the MVP.
+### 11.2 Completion
 
-### 8.4 Star system
+A level is completed when all mandatory objectives are satisfied in the
+final simulation result.
 
--   **1 star:** Mandatory objectives satisfied.
--   **2 stars:** Mandatory objectives satisfied and the first score
-    threshold reached.
--   **3 stars:** Mandatory objectives satisfied and the second score
-    threshold reached.
+The player does not need the maximum possible score to complete a
+level.
 
-The second threshold must be greater than or equal to the first
-threshold. Star thresholds are configured per level.
+### 11.3 Score
 
-## 9. Campaign and Progression
+``` text
+score = sum(score value of each powered fixed building)
+```
 
-### 9.1 MVP campaign
+Score is based on the final powered state, not on buildings merely
+present in the level. Score values are configured per building instance
+per level. Generators carry no score.
+
+### 11.4 Star system
+
+-   **0 stars:** mandatory objectives not satisfied (level not
+    completed).
+-   **1 star:** mandatory objectives satisfied.
+-   **2 stars:** mandatory objectives satisfied and score ≥ first
+    threshold.
+-   **3 stars:** mandatory objectives satisfied and score ≥ second
+    threshold.
+
+Thresholds are integers configured per level, and the second threshold
+must be greater than or equal to the first. Score thresholds are applied
+only after the mandatory objectives are satisfied.
+
+## 12. Campaign and Progression
+
+### 12.1 MVP campaign
 
 -   The MVP includes approximately 5--10 levels.
 -   All levels are unlocked from the beginning.
--   Players may skip earlier levels and play any available campaign
-    level.
+-   Players may skip earlier levels and play any available level.
 -   Each level's completion and best result are saved independently.
 -   Replaying a level may improve its score or star rating.
--   Preserve the best result for each level.
 -   The MVP does not save or resume an unfinished level.
 
-### 9.2 Future modes
+### 12.2 Best result
 
-Planned for later phases: - Level Creator - Public community level
-library
+-   "Best" means highest star count first, then highest score.
+-   Progress is stored in `localStorage` under a versioned key, so the
+    storage format can change safely.
 
+### 12.3 Future modes
+
+Planned for later phases: Level Creator, public community level library.
 These are not part of the MVP.
 
-## 10. Constraint Satisfaction Problem (CSP) Solver
+## 13. Constraint Satisfaction Problem (CSP) Solver
 
-### 10.1 Purpose
+### 13.1 Purpose
 
-The CSP solver provides an optional in-game assistance feature. It
-searches for generator placements and building activation plans that
-satisfy a level's constraints and objectives.
+The CSP solver provides optional in-game assistance. It searches for a
+generator layout and an activation selection that satisfy a level's
+mandatory objectives.
 
 The solver must be a custom TypeScript implementation. Do not use a
 black-box CSP library.
 
-### 10.2 Solver scope
+### 13.2 Solver scope
 
-The solver searches for: - Generator positions. -
-Generator-to-road-network assignments, derived from placement. -
-Building activation decisions and activation order. - Whether mandatory
-objectives can be satisfied. - A solution with the highest possible
-score when optimization is requested.
+The solver searches for:
 
-Road placement is not part of the search because roads are fixed in each
-level.
+-   Generator placements (type and origin).
+-   Generator-to-network assignments, derived from placement.
+-   The set of buildings to activate in each network.
+-   Whether the mandatory objectives can be satisfied.
+-   The highest-scoring valid solution when optimization is requested.
 
-### 10.3 Solver inputs
+Road placement is not part of the search because roads are fixed.
 
--   Level grid and fixed roads.
--   Precomputed road components.
--   Building positions and variants.
+### 13.3 Solver inputs
+
+-   Level grid and fixed roads, with precomputed road components.
+-   Building instances and variants.
 -   Restricted terrain.
--   Generator types, output, and inventory.
--   Mandatory objectives.
--   Optional current player generator placements, depending on the
-    selected help mode.
+-   Generator types, footprints, outputs, and inventory.
+-   Mandatory objectives and star thresholds.
+-   Optionally, the current generator placements (depending on help
+    mode).
 
-### 10.4 Solver outputs
+### 13.4 Solver outputs
 
--   Generator positions.
+-   Generator layout (type and origin of each generator).
 -   Assigned network for each connected generator.
--   Building activation plan/order.
+-   Set of buildings to activate.
 -   Final powered buildings.
 -   Generation, consumption, and remaining capacity per network.
 -   Final score.
--   Solver statistics, including:
-    -   Search nodes
-    -   Backtracks
-    -   Runtime
-    -   Whether a valid solution was found
-    -   Best score found, when optimizing
+-   Statistics: search nodes, backtracks, runtime, whether a valid
+    solution was found, best score found (when optimizing), and whether
+    optimization may be incomplete.
 
-### 10.5 Constraints
+### 13.5 Constraints
 
-The solver must enforce the same rules as gameplay: - Generators cannot
-occupy roads, buildings, restricted terrain, or other generators. - A
-generator must be orthogonally adjacent to no more than one distinct
-road component. - A generator adjacent to zero road components is valid
-but disconnected and contributes no power. - A generator adjacent to
-exactly one road component is valid and connected. - A generator
-adjacent to two or more distinct road components is invalid. - Diagonal
-adjacency is ignored. - Buildings must be orthogonally connected to a
-road network to receive power. - Road networks use orthogonal
-connectivity only. - Buildings cannot connect directly to other
-buildings. - Each road component has independent power capacity. - Full
-building demand is required for activation. - Power-plant output is
-available only after activation. - Activation order must respect power
-availability. - Mandatory objectives must be satisfied.
+The solver enforces exactly the same rules as gameplay:
 
-### 10.6 Help modes
+-   Every cell of a generator footprint is in-grid and empty
+    unrestricted, and does not overlap another generator.
+-   A generator footprint touches at most one distinct road component.
+-   A generator touching zero components is valid but contributes
+    nothing.
+-   Only connected generators contribute output.
+-   Each network has independent capacity.
+-   Fixed buildings must be road-connected to be powered.
+-   Total demand of the active buildings in a network must not exceed
+    that network's generation.
+-   Mandatory objectives must be satisfied.
 
-The player chooses between two modes:
+### 13.6 Candidate domains
 
-1.  **Respect current placements:** Treat current generator positions as
-    fixed. If no valid solution exists with those positions, report that
-    no solution was found.
-2.  **Allow rearrangement:** Allow the solver to reposition existing
-    generators within the level's valid placement rules.
+-   Avoid brute force over every grid cell and every inventory
+    combination.
+-   Since disconnected generators contribute nothing, the useful domain
+    for each generator is the set of valid *connected* footprints
+    (exactly one adjacent road component). Inventory units may remain
+    unplaced when no useful position exists.
+-   Identical generator types are interchangeable, so the search should
+    break that symmetry (for example by ordering their positions).
+-   Detailed formulation (variable and domain definitions, activation
+    subset search, upper bounds) is defined in production.
+
+### 13.7 Help modes
+
+1.  **Respect current placements:** treat the generators currently on the
+    board as fixed. If no valid solution exists with those positions,
+    report that no solution was found.
+2.  **Allow rearrangement:** the solver may reposition generators within
+    the normal placement rules.
 
 Using solver assistance carries no score penalty.
 
-### 10.7 Feasibility and optimization
+### 13.8 Feasibility and optimization
 
-**Feasibility mode** - Find the first valid solution satisfying
-mandatory objectives. - Stop when a solution is found, subject to any
-configured time limit.
+**Feasibility mode:** find the first valid solution satisfying the
+mandatory objectives.
 
-**Optimization mode** - Find the highest-scoring valid solution. - A
-suitable approach is branch-and-bound: 1. Find an initial valid
-solution. 2. Store its score as the current best. 3. Continue searching.
-4. Calculate an upper bound on the score achievable from the current
-search branch. 5. Prune branches that cannot exceed the current best
-score. 6. Return the best solution found.
+**Optimization mode:** find the highest-scoring valid solution, for
+example with branch-and-bound: find an initial valid solution, keep its
+score as the current best, prune branches whose upper bound cannot
+exceed it, and return the best found.
 
-A time limit may be used. If the limit is reached after a valid solution
-has been found, return the best valid solution found so far and indicate
-that optimization may be incomplete.
+### 13.9 Execution, timeout, and cancellation
 
-### 10.8 CSP techniques and evaluation
+-   The solver runs in a Web Worker so the UI stays responsive.
+-   The UI shows a loading animation while solving and lets the player
+    cancel.
+-   Default time limits (configurable): 5 seconds for feasibility and 15
+    seconds for optimization.
+-   If the limit is reached after a valid solution has been found,
+    return the best valid solution found so far and indicate that
+    optimization may be incomplete. If none was found, report that no
+    solution was found within the limit.
 
-The academic evaluation compares: 1. Plain backtracking. 2. Backtracking
-with Minimum Remaining Values (MRV). 3. Backtracking with MRV and
-forward checking.
+### 13.10 Presentation of results
 
-Measure: - Search nodes - Backtracks - Runtime - Success/failure - Best
-score
+-   The game shows the solved layout (and the buildings to activate) as
+    a read-only result with basic statistics.
+-   The solver does not modify the board. The player recreates the
+    layout manually.
+-   There is no score penalty for using the solver.
+-   The solver is available only during the Placement phase.
 
-Avoid naive brute force over every grid cell. Candidate generator
-positions should be derived efficiently, especially from cells that can
-be adjacent to road networks.
+### 13.11 CSP techniques and evaluation
 
-The initial user-facing solver result should show the solution and basic
-statistics. A step-by-step educational visualization of domain pruning
-and backtracking is deferred to a later phase.
+The academic evaluation compares:
 
-### 10.9 Shared rules
+1.  Plain backtracking.
+2.  Backtracking with Minimum Remaining Values (MRV).
+3.  Backtracking with MRV and forward checking.
 
-The gameplay engine and CSP solver must share the same placement
-validation, road assignment, power calculation, activation, objective
-evaluation, and scoring logic wherever practical. The solver must never
-return a configuration that gameplay considers invalid.
+Measure search nodes, backtracks, runtime, success/failure, and best
+score.
 
-## 11. User Interface and User Experience
+A Node-run TypeScript benchmark script runs all three variants on all
+campaign levels and outputs a table (CSV) of those measures. A
+step-by-step educational visualization of the search is deferred to
+Phase 2.
 
-### 11.1 Visual direction
+### 13.12 Shared rules
 
--   Minimalist and simulation-oriented.
--   Clear visual distinction between roads, buildings, generators, and
-    restricted terrain.
--   Powered buildings appear illuminated.
--   Unpowered buildings appear darkened or otherwise visually inactive.
--   Show generator and network connectivity clearly.
--   Invalid placement receives immediate, understandable feedback.
+The gameplay engine and the solver must share the same placement
+validation, road assignment, capacity and activation logic, objective
+evaluation, and scoring code. The solver must never return a
+configuration that gameplay considers invalid.
 
-### 11.2 Main gameplay layout
+## 14. User Interface and User Experience
 
-**Top HUD** - Level name/number - Available power - Total generation -
-Total consumption - Score - Mandatory objectives
+### 14.1 Source of truth
 
-**Main grid** - Fixed roads - Buildings - Generators - Restricted
-terrain - Powered/unpowered visual states
+The visual and interaction design is created by the project owner in
+Figma. **Figma is the source of truth** for layout, visual style, theme,
+iconography, language, animation style, input model (how generators are
+selected, placed, and moved), hover feedback, and the toolbar.
 
-**Building information panel** - Building name and category - Power
-demand - Power output, if applicable - Score value - Activation status -
-Activate action when eligible
+This section only defines the functional behavior and information the UI
+must be able to present.
 
-**Bottom toolbar** - Generator selection and placement - Remove/eraser
-tool - Selection tool - Undo, if implemented - CSP solver/help - Reset
-level
+### 14.2 Information required per phase
 
-There is no road placement tool in the MVP.
+**Placement phase**
 
-### 11.3 Feedback rules
+-   Level name/number and mandatory objectives.
+-   Generator inventory by type, and placed generators.
+-   Per-network capacity check: generation, demand, surplus.
+-   Reset and solver help access.
 
--   Invalid generator placement: reject the action and show a toast.
--   Valid but disconnected generator placement: allow placement without
-    an error toast.
--   Connected generator: show its assigned road network and contribution
-    to generation.
+**Activation phase**
+
+-   Per-network generation, consumption, and remaining capacity.
+-   Per-building information: name, category, demand, score, connection
+    state, activation state.
+-   Activate/deactivate actions, enabled only when allowed.
+-   Reset.
+
+**Simulation phase**
+
+-   The animation of the compiled result.
+
+**Result**
+
+-   Objective status, score, star rating, and best result for the level.
+
+**Navigation**
+
+-   A back button (Activation and Result phases) and a proceed control
+    (Placement and Activation phases), per section 3.2.
+
+### 14.3 Feedback rules
+
+-   Invalid generator placement: reject the action and show a toast
+    explaining that a generator cannot touch multiple separate road
+    networks.
+-   Valid but disconnected generator: allow placement, no error toast.
+-   Connected generator: show its assigned road network and its
+    contribution.
 -   Building without road connectivity: indicate that it cannot receive
     power.
--   Building with insufficient available capacity: indicate that it
-    cannot currently be activated.
+-   Building that cannot currently be activated due to insufficient
+    remaining capacity: indicate this.
 -   Powered building: show its active state.
--   Network reset: clearly communicate that the affected network has
-    lost its powered state and requires new activation choices.
+-   Solver: loading animation, cancel, timeout, and no-solution
+    messages.
 
-### 11.4 Solver help UI
+### 14.4 Undo
 
--   Offer the two solver modes: respect current placements or allow
-    rearrangement.
--   Show the resulting generator positions and activation plan.
--   Show basic solver statistics.
--   Do not penalize the player's score for using help.
+Undo is not an MVP engine requirement. It is revisited only if the Figma
+design includes it.
 
-## 12. Level Data and Validation
+## 15. Level Data and Validation
 
-### 12.1 Data-driven format
+### 15.1 Data-driven format
 
-Campaign levels should be stored as JSON from the beginning. This allows
-a future Level Creator to use the same level schema.
+Campaign levels are stored as JSON from the beginning. This allows a
+future Level Creator to use the same schema.
 
-A level definition should include: - Level ID and name - Grid width and
-height - Fixed road coordinates - Generator inventory by type and
-quantity - Building instances, including ID, variant, position, and
-score - Restricted terrain and footprints - Mandatory objective
-definitions - Star score thresholds
+A level definition includes:
 
-Static building and generator definitions should be stored separately
-from individual level data.
+-   Level ID and name.
+-   Grid width and height.
+-   Fixed road coordinates.
+-   Restricted terrain cells.
+-   Building instances: ID, variant, origin, score.
+-   Generator inventory by type and quantity.
+-   Mandatory objective definition.
+-   Star score thresholds.
 
-### 12.2 Example building definitions
+Static building and generator definitions (including footprint, demand,
+output) are stored separately from level data.
 
-The following values are illustrative only and are not final balance
-values:
+### 15.2 Example building definitions
+
+Illustrative only; not final balance values.
 
 ``` json
 {
+  "house": {
+    "name": "House",
+    "category": "residential",
+    "width": 1,
+    "height": 1,
+    "demand": 2,
+    "output": 0
+  },
   "small_hospital": {
     "name": "Small Hospital",
     "category": "hospital",
@@ -669,60 +836,132 @@ values:
     "demand": 5,
     "output": 0
   },
-  "solar_plant": {
-    "name": "Solar Plant",
-    "category": "power_plant",
+  "small_generator": {
+    "name": "Small Generator",
+    "category": "generator",
+    "width": 1,
+    "height": 1,
+    "demand": 0,
+    "output": 3
+  },
+  "generator": {
+    "name": "Generator",
+    "category": "generator",
     "width": 2,
     "height": 2,
-    "demand": 2,
-    "output": 5
+    "demand": 0,
+    "output": 8
   }
 }
 ```
 
-### 12.3 Load-time validation
+### 15.3 Example level
 
-Validate level data when loading it. At minimum, check: - Grid
-dimensions are valid. - Road coordinates are within the grid. - Building
-and terrain footprints are within the grid. - Fixed objects do not
-overlap illegally. - Generator inventory quantities are valid. -
-Building and generator variant IDs exist. - Objective definitions follow
-the supported schema. - Star thresholds are valid and ordered. -
-Buildings have an unambiguous road-network assignment under the MVP
-rules. - Level coordinates and footprints are valid. - The level
-contains usable road networks where required.
+Illustrative only.
 
-Invalid level data should produce a clear development-time/load-time
-error rather than causing undefined gameplay behavior.
+``` json
+{
+  "id": "example-01",
+  "name": "Two Districts",
+  "grid": { "width": 8, "height": 5 },
+  "roads": [
+    { "x": 0, "y": 2 }, { "x": 1, "y": 2 }, { "x": 2, "y": 2 }, { "x": 3, "y": 2 },
+    { "x": 5, "y": 2 }, { "x": 6, "y": 2 }, { "x": 7, "y": 2 }
+  ],
+  "terrain": [{ "x": 4, "y": 4 }],
+  "buildings": [
+    { "id": "b1", "variant": "house", "origin": { "x": 1, "y": 1 }, "score": 10 },
+    { "id": "b2", "variant": "house", "origin": { "x": 2, "y": 3 }, "score": 15 },
+    { "id": "b3", "variant": "small_hospital", "origin": { "x": 5, "y": 0 }, "score": 40 }
+  ],
+  "inventory": { "small_generator": 1, "generator": 1 },
+  "objective": {
+    "type": "and",
+    "children": [
+      { "type": "categoryCount", "category": "hospital", "min": 1 },
+      { "type": "categoryCount", "category": "residential", "min": 1 }
+    ]
+  },
+  "stars": { "two": 40, "three": 55 }
+}
+```
 
-## 13. Technical Stack
+How this level plays out:
 
-Recommended MVP stack:
+-   There are two road components: **A** (x = 0..3 on row 2) and **B**
+    (x = 5..7 on row 2). The empty cell (4, 2) touches both, so a 1×1
+    generator there is *invalid*.
+-   Network A has two houses (demand 2 + 2 = 4). Network B has one
+    hospital (demand 5).
+-   Placing the generator (output 8) on B powers the hospital. Placing
+    the small generator (output 3) on A can power only one house
+    (demand 2; both would need 4), so the player chooses the 15-point
+    house.
+-   Best result: 15 + 40 = 55 points, which meets the 3-star threshold.
+    The opposite assignment (generator on A, small generator on B)
+    leaves the hospital unpowered and fails the objective.
 
-  Concern                   Technology
-  ------------------------- --------------------------------------------
-  Application               React
-  Language                  TypeScript
-  Build tooling             Vite
-  Grid rendering            CSS Grid
-  State management          Zustand
-  Styling                   Tailwind CSS or equivalent project styling
-  Runtime data validation   Zod
-  Unit testing              Vitest
-  Road components           BFS or DFS
-  CSP solver                Custom TypeScript implementation
-  Solver execution          Web Worker
-  Campaign progress         localStorage
+### 15.4 Load-time validation
 
-A game engine such as Phaser or Godot is not required for the MVP. React
-and CSS Grid are sufficient for the board-based interaction and
-interface.
+Validate level data when loading it. At minimum, check:
 
-## 14. Suggested Project Structure
+-   Grid dimensions are valid.
+-   Road, terrain, and building footprints are within the grid.
+-   Fixed objects do not overlap.
+-   Building instance IDs are unique.
+-   Building variant IDs exist; inventory type IDs exist and have
+    `category = "generator"`.
+-   Generator inventory quantities are non-negative integers.
+-   Objective definitions follow the supported schema and reference
+    existing categories and building IDs.
+-   Star thresholds are integers and `two <= three`.
+-   Every fixed building touches at most one distinct road component.
+-   Every fixed building has road adjacency whenever the objective
+    requires it to be powered (for example `allBuildingsPowered`, or a
+    `buildingPowered` reference to it). This is primarily a
+    level-production rule; the validator enforces it as a safety net.
+-   The level contains at least one road network.
+
+Invalid level data must produce a clear development-time/load-time error
+rather than causing undefined gameplay behavior. Both buildings with
+ambiguous networks and unreachable required buildings are revisited in
+Phase 2.
+
+## 16. Technical Stack
+
+Recommended MVP stack (versions are pinned when the project is
+scaffolded):
+
+| Concern | Technology |
+|----|----|
+| Application | React |
+| Language | TypeScript |
+| Build tooling | Vite |
+| Routing | React Router (level select and game screens) |
+| Grid rendering | CSS Grid |
+| State management | Zustand |
+| Styling | Tailwind CSS |
+| Runtime data validation | Zod |
+| Unit testing | Vitest |
+| Package manager | pnpm |
+| Linting/formatting | ESLint and Prettier |
+| Road components | BFS or DFS |
+| CSP solver | Custom TypeScript implementation |
+| Solver execution | Web Worker |
+| Solver benchmark | Node-run TypeScript script |
+| Campaign progress | localStorage (versioned key) |
+
+A game engine such as Phaser or Godot is not required for the MVP.
+
+**Hosting:** the first milestone is a local version. Deployment is
+optional and may move to Phase 2. The build is a static site, so it can
+be hosted on any static host (for example Vercel or Wasmer).
+
+## 17. Suggested Project Structure
 
 ``` text
 src/
-├── app/
+├── app/                      # routing, screens (level select, game)
 ├── components/
 │   ├── game/
 │   │   ├── GameGrid.tsx
@@ -731,25 +970,30 @@ src/
 │   │   ├── Building.tsx
 │   │   ├── Generator.tsx
 │   │   ├── GameHUD.tsx
-│   │   └── GameToolbar.tsx
+│   │   ├── PlacementPanel.tsx
+│   │   ├── ActivationPanel.tsx
+│   │   ├── SimulationView.tsx
+│   │   └── ResultPanel.tsx
 │   └── ui/
 ├── data/
-│   ├── buildings.json
-│   ├── generators.json
+│   ├── buildings.json        # includes generator variants
 │   └── campaign/
-├── engine/
+├── engine/                   # pure TypeScript, no React/Zustand imports
 │   ├── grid/
 │   │   ├── grid.ts
-│   │   └── placement.ts
+│   │   └── footprint.ts
 │   ├── connectivity/
-│   │   ├── roadGraph.ts
 │   │   ├── connectedComponents.ts
 │   │   └── networkAssignment.ts
+│   ├── placement/
+│   │   ├── evaluatePlacement.ts
+│   │   └── generatorActions.ts
+│   ├── flow/
+│   │   └── phases.ts
 │   ├── simulation/
-│   │   ├── powerCalculation.ts
+│   │   ├── capacity.ts
 │   │   ├── activation.ts
-│   │   ├── networkReset.ts
-│   │   └── simulation.ts
+│   │   └── runSimulation.ts
 │   ├── objectives/
 │   │   ├── objectiveEvaluator.ts
 │   │   └── scoring.ts
@@ -769,83 +1013,160 @@ src/
 │   ├── level.ts
 │   ├── building.ts
 │   ├── grid.ts
-│   ├── generator.ts
+│   ├── game.ts
 │   └── solver.ts
 └── tests/
     ├── connectivity/
+    ├── placement/
     ├── simulation/
     ├── objectives/
     └── csp/
+scripts/
+├── validate-levels.ts
+└── benchmark-solver.ts
 ```
 
-## 15. Simulation Pipeline
+## 18. State Model and Engine API
 
-A typical level initialization and simulation flow:
+### 18.1 Three layers
+
+-   **`LevelDefinition`:** immutable validated JSON (section 15).
+-   **`LevelIndex`:** derived once at load: road component IDs,
+    building-to-network assignment, footprint helpers.
+-   **`GameState`:** mutable gameplay state.
+
+``` ts
+type Phase = "placement" | "activation" | "simulation" | "result";
+
+interface PlacedGenerator {
+  instanceId: string;
+  typeId: string;
+  origin: { x: number; y: number };
+}
+
+interface GameState {
+  phase: Phase;
+  generators: PlacedGenerator[];
+  activeBuildingIds: Set<string>; // empty until the Activation phase
+  result: SimulationResult | null;
+}
+```
+
+Remaining inventory and network assignments are derived from
+`generators` and the `LevelIndex`, not stored separately.
+
+### 18.2 Rules for the engine
+
+-   The engine is pure TypeScript with no React or Zustand imports, so
+    the UI, the solver, the Web Worker, and tests all use the same code.
+-   Zustand only holds `GameState` and calls engine functions.
+-   Every state-changing function checks the current phase and returns a
+    result object, either a new state or a rejection with a reason. It
+    never mutates its input.
+
+### 18.3 Suggested engine functions
+
+-   `buildLevelIndex(level)`
+-   `evaluatePlacement(index, state, typeId, origin, ignoreInstanceId?)`
+-   `placeGenerator`, `moveGenerator`, `removeGenerator`
+-   `computeCapacityReport(index, state)`
+-   `resetLevel(level)`
+-   `enterActivation`, `activateBuilding`, `deactivateBuilding`, `goBack`
+-   `runSimulation(index, state)`
+-   `evaluateObjective`, `computeScore`, `computeStars`
+
+## 19. Simulation Pipeline
+
+Level initialization:
 
 1.  Load and validate level data.
 2.  Build the grid representation.
-3.  Calculate fixed road connected components using orthogonal BFS/DFS.
-4.  Assign buildings to their road components.
-5.  Validate generator positions.
-6.  For each valid generator, calculate orthogonal adjacent road
-    components:
-    -   Zero components: valid, disconnected, no network assignment.
-    -   One component: valid, connected, assigned to that network.
-    -   More than one component: invalid; reject the placement
-        operation.
-7.  Calculate generator capacity per network.
-8.  Process player building activation choices.
-9.  Apply deterministic automatic activation where its conditions are
-    met.
-10. Evaluate mandatory objectives.
-11. Calculate score and star rating.
-12. Update saved best campaign result when appropriate.
+3.  Calculate fixed road components using orthogonal BFS/DFS.
+4.  Assign fixed buildings to their road components.
+5.  Create the initial `GameState` in the Placement phase.
 
-The fixed road components can be cached for the duration of the level.
-Generator and building assignments should be recalculated only when
-relevant state changes.
+Placement phase (per successful action):
 
-## 16. Testing Requirements
+1.  Validate the action (phase, inventory, footprint, placement rule).
+2.  Reject with a reason, or commit the new generator layout.
+3.  Run the capacity check.
 
-The MVP should include automated tests for at least the following.
+Activation phase:
 
-### 16.1 Road connectivity
+1.  Start from an empty active set.
+2.  Apply auto-activation to every network where
+    `demand(n) <= generation(n)`.
+3.  Process the player's activation and deactivation choices.
+
+Simulation phase:
+
+1.  Compute per-network accounting from the final state.
+2.  Evaluate mandatory objectives.
+3.  Calculate score and star rating.
+4.  Update the saved best result when the level was completed and the
+    result is better.
+5.  The UI plays the animation from the compiled result.
+
+## 20. Testing Requirements
+
+The MVP includes automated tests for at least the following.
+
+### 20.1 Road connectivity
 
 -   Orthogonally adjacent road cells belong to the same component.
 -   Diagonally adjacent road cells belong to separate components.
 -   Multiple disconnected road systems receive distinct IDs.
 
-### 16.2 Generator placement
+### 20.2 Generator placement
 
--   Generator adjacent to zero road components is valid and
+-   1×1 generator adjacent to zero road components is valid and
     disconnected.
 -   Generator adjacent to one road component is valid and connected.
 -   Generator adjacent to multiple cells of the same component is valid.
 -   Generator adjacent to two distinct components is invalid.
 -   Diagonal-only road adjacency does not establish connectivity.
+-   Multi-cell generator: adjacency is evaluated over the whole
+    footprint boundary.
+-   Footprints overlapping roads, buildings, terrain, other generators,
+    or the grid boundary are rejected.
 -   Invalid new placement is rejected and inventory remains unchanged.
 -   Invalid movement restores the generator's previous position.
+-   A move may overlap the generator's own previous footprint.
 -   Valid disconnected placement does not trigger an invalid-placement
     toast.
+-   Place, move, and remove are rejected outside the Placement phase.
 
-### 16.3 Power simulation
+### 20.3 Capacity check
 
--   Only connected generators contribute output.
+-   Only connected generators contribute generation.
 -   Generator output is assigned to exactly one network.
 -   Disconnected networks do not share capacity.
--   Full demand is required for building activation.
--   A power plant contributes output only after activation.
--   Activating a building updates capacity correctly.
--   Deterministic automatic activation produces repeatable results.
--   Removing a generator preserves powered buildings if capacity remains
-    sufficient.
--   Removing a generator resets only the affected network when capacity
-    becomes insufficient.
--   A reset turns off activated power plants and removes their output.
--   Other road networks remain unaffected by a reset.
+-   The check runs after each successful place, move, and remove, and
+    not after a rejected action.
+-   `canPowerAll` is true exactly when generation ≥ total connected
+    demand.
 
-### 16.4 Objectives and scoring
+### 20.4 Activation
 
+-   A building activates only with full demand available.
+-   Buildings without road connectivity cannot be activated.
+-   Deactivation frees capacity.
+-   Auto-activation applies exactly to networks where
+    `demand(n) <= generation(n)`, and only to those networks.
+-   Activation in one network does not affect another.
+-   Activation and deactivation are rejected outside the Activation
+    phase.
+-   Reset clears generators and activation state and restores the
+    original level state.
+-   Back from Activation to Placement clears the active set and keeps
+    the placed generators.
+-   Back from Result to Activation keeps the active set and discards
+    the result.
+-   Back is rejected during the Simulation phase.
+
+### 20.5 Simulation, objectives, and scoring
+
+-   `runSimulation` is deterministic for identical inputs.
 -   AND objectives require all child conditions.
 -   OR objectives require at least one child condition.
 -   Category-count objectives count powered buildings only.
@@ -853,75 +1174,73 @@ The MVP should include automated tests for at least the following.
 -   Score includes only powered buildings.
 -   Star thresholds are applied only after mandatory objectives are
     satisfied.
+-   Best-result comparison orders by stars, then score.
 
-### 16.5 CSP
+### 20.6 CSP
 
 -   Solver never returns an invalid generator placement.
--   Solver respects fixed placements in respect-current-placement mode.
+-   Solver respects fixed placements in respect-current-placements
+    mode.
 -   Solver may rearrange generators in rearrangement mode.
--   Solver respects network independence and activation order.
+-   Solver respects network independence and capacity.
 -   Solver and gameplay agree on solution validity and score.
--   Backtracking, MRV, and forward checking variants produce valid
+-   Backtracking, MRV, and MRV with forward checking produce valid
     results.
+-   Timeout returns the best solution found so far, flagged as possibly
+    incomplete; cancellation stops the search.
 
-## 17. Development Roadmap
+### 20.7 Level validation
+
+-   Each load-time validation rule in 15.4 has a passing and a failing
+    test case.
+
+## 21. Development Roadmap
 
 ### Phase 1 --- MVP
 
-1.  **Grid foundation**
-    -   Fixed roads
-    -   Buildings and footprints
-    -   Restricted terrain
-    -   Generator representation
+1.  **Project setup and grid foundation**
+    -   Scaffold and tooling
+    -   Types and Zod schemas
+    -   Fixed roads, buildings, footprints, restricted terrain
 2.  **Connectivity**
     -   Orthogonal road components
     -   Building-to-road assignment
-    -   Generator placement validation
-    -   Generator connectivity and network assignment
-3.  **Generator mechanics**
-    -   Placement
-    -   Rejection of invalid placements
-    -   Movement and removal
-    -   Inventory
-    -   Network recalculation
-4.  **Electrical simulation**
-    -   Per-network capacity
-    -   Building activation
-    -   Power-generating buildings
-    -   Automatic activation
-    -   Network reset behavior
-5.  **Campaign**
-    -   JSON level definitions
-    -   Mandatory objectives
-    -   Score and stars
-    -   Level selection and progress persistence
+3.  **Placement phase**
+    -   Placement validation (multi-cell footprints)
+    -   Place, move, remove, inventory, reset
+    -   Capacity check
+4.  **Activation phase**
+    -   Per-network accounting
+    -   Manual activation and deactivation
+    -   Auto-activation
+5.  **Simulation phase and campaign**
+    -   `runSimulation`, objectives, score, stars
+    -   JSON levels, level select, progress persistence
 6.  **CSP solver**
-    -   Backtracking
-    -   MRV
-    -   Forward checking
-    -   Feasibility mode
-    -   Optimization mode
-    -   Solver statistics
-7.  **Polish**
-    -   HUD and visual power states
-    -   Placement feedback
-    -   Building information panel
+    -   Backtracking, MRV, forward checking
+    -   Feasibility and optimization modes
+    -   Web Worker, timeout, cancellation
+    -   Statistics and benchmark script
+7.  **UI implementation and polish**
+    -   Implement the Figma design
+    -   Simulation animation
     -   Solver help interface
-    -   Reset and local progress
     -   Approximately 5--10 campaign levels
 
 ### Phase 2
 
--   Level Creator
--   Custom level validation and testing
--   Partial power and advanced building mechanics
--   Automatic priority-based activation
+-   Level Creator and custom level validation
+-   Revisit buildings touching multiple road components and unreachable
+    required buildings
+-   Level-fixed power-producing buildings (power plants) and other
+    advanced building mechanics
+-   Generator rotation
+-   Performance and user-experience optimization
+-   Partial power
+-   Deployment (static hosting)
 -   Educational CSP visualization
 -   Save/resume unfinished levels
--   More configurable building properties
--   Public community level library
--   User accounts and cloud persistence
--   Supabase authentication and PostgreSQL
+-   Public community level library, accounts, and cloud persistence
 -   Solver difficulty estimation
 -   Campaign expansion to 30 or more levels
 
@@ -932,45 +1251,137 @@ The MVP should include automated tests for at least the following.
 -   Community discovery features
 -   Leaderboards and other social features
 
-## 18. Explicit MVP Exclusions
+## 22. Explicit MVP Exclusions
 
-The following are intentionally outside the MVP: - Player-created,
-removed, or edited roads. - Road placement tools. - Electricity transfer
-between disconnected road networks. - Diagonal connectivity. - Buildings
-acting as electricity paths between roads. - Partial building power. -
-Random activation behavior. - Mandatory building activation priority
-when the player has a choice. - Level Creator. - Public community level
-library. - Multiplayer. - Saving and resuming unfinished levels. -
-Educational visualization of CSP internals.
+The following are intentionally outside the MVP:
 
-## 19. Decisions That Must Remain Consistent
+-   Player-created, removed, or edited roads, and road placement tools.
+-   Electricity transfer between disconnected road networks.
+-   Diagonal connectivity.
+-   Buildings acting as electricity paths between roads.
+-   Partial building power.
+-   Level-fixed power-producing buildings (power plants).
+-   Generator rotation.
+-   Random behavior of any kind.
+-   Level Creator and public community level library.
+-   Multiplayer.
+-   Saving and resuming unfinished levels.
+-   Educational visualization of CSP internals.
+-   Applying a solver result to the board automatically.
 
-These are core rules and must not drift between UI, simulation, solver,
-and tests:
+## 23. Decisions That Must Remain Consistent
+
+These core rules must not drift between UI, engine, solver, and tests:
 
 1.  Roads are fixed and use orthogonal connectivity.
 2.  Each connected road component is an independent electrical network.
-3.  Generator placement validity is determined by the number of distinct
-    **orthogonally adjacent** road components.
-4.  Zero adjacent components means valid but disconnected.
-5.  Exactly one adjacent component means valid and connected.
-6.  Two or more adjacent components means invalid.
-7.  Invalid generator placement is rejected; invalid generators never
+3.  Generator placement validity is determined by the number of
+    distinct **orthogonally adjacent** road components over the
+    generator's footprint boundary.
+4.  Zero adjacent components means valid but disconnected; exactly one
+    means valid and connected; two or more means invalid.
+5.  Invalid generator placement is rejected; invalid generators never
     remain on the board.
-8.  Valid but disconnected generators are allowed and do not produce an
+6.  Valid but disconnected generators are allowed and do not produce an
     invalid-placement toast.
-9.  Only connected generators contribute power.
-10. Buildings require road connectivity and full demand to activate.
-11. Power plants contribute output only after activation.
+7.  Only connected generators contribute power, and each contributes to
+    exactly one network.
+8.  Generators need no activation.
+9.  Each attempt follows Placement → Activation → Simulation. Actions
+    are only valid in their phase.
+10. The capacity check runs after every successful place, move, and
+    remove, and is informational only.
+11. Buildings require road connectivity and full demand to activate.
 12. Network capacity and activation are independent for each road
     component.
-13. If a generator change makes the current powered state unsustainable,
-    all powered buildings in that affected network reset.
-14. Mandatory objectives determine completion; score determines the
+13. Auto-activation applies to a network exactly when its total
+    connected demand is within its generation.
+14. Manual deactivation is allowed during the Activation phase.
+15. Reset unplaces all generators and returns the level to its original
+    state; it never triggers auto-activation.
+16. Building technical values (footprint, demand, output) are
+    predefined; only building score is configurable per level.
+17. Mandatory objectives determine completion; score determines the
     additional star thresholds.
-15. The CSP solver must obey exactly the same rules as gameplay.
-16. All campaign levels are unlocked from the beginning.
-17. Solver assistance has no score penalty.
+18. Animation never affects the compiled result.
+19. The CSP solver obeys exactly the same rules as gameplay.
+20. All campaign levels are unlocked from the beginning.
+21. Solver assistance has no score penalty.
+
+## 24. Resolved Decisions and Assumptions
+
+### 24.1 Resolved decisions
+
+-   **Power plants:** level-fixed power-producing buildings are
+    deferred to Phase 2.
+-   **Auto-activation trigger:** applied automatically on entering the
+    Activation phase for the MVP; to be evaluated through playtesting.
+-   **Phase navigation:** a back button moves between phases (see 3.2).
+-   **Generator shape:** fixed rectangular footprints in the MVP;
+    rotation is deferred to Phase 2.
+-   **Solver availability:** Placement phase only.
+-   **MVP priority:** ease of implementation. Performance and
+    user-experience optimization are Phase 2 targets.
+
+### 24.2 Assumptions (confirm or correct)
+
+-   Back from Result keeps the active set; back from Activation clears
+    it and keeps the placed generators; back is unavailable while the
+    Simulation animation plays.
+-   Entering the Activation phase with no generators, or with
+    insufficient capacity, is allowed.
+-   Multi-cell generators are validated over the whole footprint
+    boundary (union of adjacent cells), reducing to the original rule
+    for 1×1.
+-   Generators have `demand = 0`, need no activation, and have no score.
+-   Generators and fixed buildings share one definitions file, with
+    generators identified by `category = "generator"`.
+-   Best result ordering is stars then score, and only completed
+    results are saved.
+-   Undo is excluded from the MVP engine unless Figma includes it.
+
+## 25. Revision History
+
+**Revision 3** changes relative to revision 2:
+
+-   Power plants (level-fixed power-producing buildings) moved to
+    Phase 2.
+-   Generator rotation moved to Phase 2; footprints are fixed in the MVP.
+-   Added back navigation between phases, with defined effects on the
+    active set and result.
+-   Auto-activation fixed as automatic on phase entry for the MVP,
+    with the trigger isolated for later playtesting.
+-   Solver restricted to the Placement phase.
+-   Stated the MVP priority: ease of implementation first, performance
+    and user experience in Phase 2.
+-   Replaced the open-items section with resolved decisions and
+    assumptions.
+
+**Revision 2** changes relative to the first specification:
+
+-   Replaced the single continuous play loop with three phases:
+    Placement, Activation, Simulation.
+-   Removed network reset on generator removal or movement. Capacity
+    insufficiency is now handled in the Activation phase through
+    player selection, with an informational capacity check in the
+    Placement phase.
+-   Removed activation ordering and power-plant bootstrap rules (all
+    fixed buildings only consume in the MVP). Activation state is now a
+    set.
+-   Generators became a building type with per-type footprint and output,
+    with footprint-based placement validation.
+-   Reset now means: unplace all generators and return to the original
+    level state, with no auto-activation.
+-   Added manual deactivation in the Activation phase.
+-   Clarified that building technical values are predefined and only
+    score varies per level.
+-   Solver now presents a read-only layout for the player to recreate,
+    with timeout, cancellation, and loading state; the solver benchmark
+    script is a deliverable.
+-   UI/UX details defer to the Figma design; this document keeps only
+    functional requirements.
+-   Added the state model, engine API outline, an example level, and
+    resolved the stack and tooling choices.
 
 ------------------------------------------------------------------------
 

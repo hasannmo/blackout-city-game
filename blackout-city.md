@@ -2,7 +2,7 @@
 
 **Document:** `blackout-city.md`\
 **Project:** Blackout City\
-**Status:** MVP specification --- revision 3\
+**Status:** MVP specification --- revision 4\
 **Genre:** Single-player, grid-based city electricity puzzle / simulation
 
 ------------------------------------------------------------------------
@@ -735,12 +735,17 @@ configuration that gameplay considers invalid.
 ### 14.1 Source of truth
 
 The visual and interaction design is created by the project owner in
-Figma. **Figma is the source of truth** for layout, visual style, theme,
-iconography, language, animation style, input model (how generators are
-selected, placed, and moved), hover feedback, and the toolbar.
+Figma. **Figma is the source of truth** for layout, iconography,
+language, animation style, input model (how generators are selected,
+placed, and moved), hover feedback, and the toolbar.
 
-This section only defines the functional behavior and information the UI
-must be able to present.
+Sections 14.5 to 14.10 record the agreed baseline for the color
+palette, typography, and phase visual modes. Figma mirrors them as
+Variables (Day and Night modes). If Figma and this document differ,
+update this document.
+
+Sections 14.2 to 14.4 define the functional behavior and information the
+UI must be able to present.
 
 ### 14.2 Information required per phase
 
@@ -792,6 +797,280 @@ must be able to present.
 
 Undo is not an MVP engine requirement. It is revisited only if the Figma
 design includes it.
+
+### 14.5 Visual design tokens
+
+The game has two visual themes, **Day** and **Night**, that share the
+same token names. Figma mirrors them as Variables with Day and Night
+modes, and the code mirrors them as CSS custom properties (14.6). The
+style is a bright, rounded, city-builder look: chunky rounded panels,
+bevelled buttons with a darker bottom rim, navy text outlines, and
+colorful buildings on a grass-and-asphalt board.
+
+**World**
+
+| Token | CSS variable | Day | Night |
+|----|----|----|----|
+| Grass light | `--grass-light` | `#8CCB5E` | `#2F6B52` |
+| Grass dark | `--grass-dark` | `#84C456` | `#2A6049` |
+| Asphalt | `--asphalt` | `#565E6C` | `#2F3645` |
+| Curb | `--curb` | `#CFC8B8` | `#6B7385` |
+| Lane paint | `--lane-paint` | `#F7F3E3` | `#D8D2BC` |
+| Tree | `--tree` | `#3E8E41` | `#1B4D35` |
+| Water | `--water` | `#5BB9E8` | `#2A6CA6` |
+| Board frame | `--board-frame` | `#5E9B3A` | `#1E4A39` |
+
+**Buildings and light**
+
+| Token | CSS variable | Day | Night |
+|----|----|----|----|
+| Wall (lit) | `--wall-lit` | `#F6E7C8` | `#F2DDAA` |
+| Roof red (lit) | `--roof-red-lit` | `#E4684F` | `#D2584A` |
+| Roof blue (lit) | `--roof-blue-lit` | `#4F8FD8` | `#4A7FC4` |
+| Wall (unlit) | `--wall-unlit` | `#CFCAC0` | `#3A4156` |
+| Roof (unlit) | `--roof-unlit` | `#8F96A3` | `#2A3044` |
+| Window (unlit) | `--window-unlit` | `#6B7280` | `#20263A` |
+| Building outline | `--outline` | `#26355D` | `#161B30` |
+| Power yellow | `--power-yellow` | `#FFD23F` | `#FFD23F` |
+| Streetlamp (night only) | `--streetlamp` | `#FFD98A` | `#FFD98A` |
+
+**Interface**
+
+| Token | CSS variable | Day | Night |
+|----|----|----|----|
+| Sky | `--sky` | `#BFE6FA` | `#232B5B` |
+| Panel cream | `--panel` | `#FFF7E3` | `#F4E8CC` |
+| Ink navy | `--ink` | `#26355D` | `#26355D` |
+| Button blue | `--btn-blue` | `#3BA7F5` | `#3BA7F5` |
+| Button blue rim | `--btn-blue-rim` | `#1E78C8` | `#1E78C8` |
+| Button green | `--btn-green` | `#6CC24A` | `#6CC24A` |
+| Button green rim | `--btn-green-rim` | `#3E8E2A` | `#3E8E2A` |
+| Alert red | `--alert` | `#E8453C` | `#E8453C` |
+| Star on | `--star-on` | `#E0A800` | `#E0A800` |
+| Star off | `--star-off` | `#B8C4CC` | `#B8B4A4` |
+
+**Network colors**
+
+| Token | CSS variable | Day | Night |
+|----|----|----|----|
+| Network A | `--net-a` | `#2F80ED` | `#7DB9FF` |
+| Network B | `--net-b` | `#FF8C42` | `#FFA45C` |
+| Network C | `--net-c` | `#8E5CF7` | `#C4A3FF` |
+| Network D | `--net-d` | `#FF6FA8` | `#FF9CC6` |
+
+Unchanged between themes: power yellow, streetlamp, ink navy, the
+button blue and green with their rims, alert red, and star on.
+
+The day building outline is a proposal (it equals ink navy). The day
+preview did not use an outline.
+
+### 14.6 Token implementation reference
+
+Tokens are defined once as CSS custom properties per theme, set through
+a `data-theme` attribute on the root element. Tailwind consumes the
+variables through its theme configuration, so components never hardcode
+hex values.
+
+``` css
+:root[data-theme="day"] {
+  --grass-light: #8CCB5E;
+  --grass-dark: #84C456;
+  --asphalt: #565E6C;
+  --curb: #CFC8B8;
+  --lane-paint: #F7F3E3;
+  --tree: #3E8E41;
+  --water: #5BB9E8;
+  --board-frame: #5E9B3A;
+  --wall-lit: #F6E7C8;
+  --roof-red-lit: #E4684F;
+  --roof-blue-lit: #4F8FD8;
+  --wall-unlit: #CFCAC0;
+  --roof-unlit: #8F96A3;
+  --window-unlit: #6B7280;
+  --outline: #26355D;
+  --power-yellow: #FFD23F;
+  --streetlamp: #FFD98A;
+  --sky: #BFE6FA;
+  --panel: #FFF7E3;
+  --ink: #26355D;
+  --btn-blue: #3BA7F5;
+  --btn-blue-rim: #1E78C8;
+  --btn-green: #6CC24A;
+  --btn-green-rim: #3E8E2A;
+  --alert: #E8453C;
+  --star-on: #E0A800;
+  --star-off: #B8C4CC;
+  --net-a: #2F80ED;
+  --net-b: #FF8C42;
+  --net-c: #8E5CF7;
+  --net-d: #FF6FA8;
+}
+
+:root[data-theme="night"] {
+  --grass-light: #2F6B52;
+  --grass-dark: #2A6049;
+  --asphalt: #2F3645;
+  --curb: #6B7385;
+  --lane-paint: #D8D2BC;
+  --tree: #1B4D35;
+  --water: #2A6CA6;
+  --board-frame: #1E4A39;
+  --wall-lit: #F2DDAA;
+  --roof-red-lit: #D2584A;
+  --roof-blue-lit: #4A7FC4;
+  --wall-unlit: #3A4156;
+  --roof-unlit: #2A3044;
+  --window-unlit: #20263A;
+  --outline: #161B30;
+  --power-yellow: #FFD23F;
+  --streetlamp: #FFD98A;
+  --sky: #232B5B;
+  --panel: #F4E8CC;
+  --ink: #26355D;
+  --btn-blue: #3BA7F5;
+  --btn-blue-rim: #1E78C8;
+  --btn-green: #6CC24A;
+  --btn-green-rim: #3E8E2A;
+  --alert: #E8453C;
+  --star-on: #E0A800;
+  --star-off: #B8B4A4;
+  --net-a: #7DB9FF;
+  --net-b: #FFA45C;
+  --net-c: #C4A3FF;
+  --net-d: #FF9CC6;
+}
+```
+
+### 14.7 Typography
+
+The typeface is **Google Sans Flex**, a variable font, the same family
+used for the logo. One family covers every role by varying the weight
+and roundness axes. It is open source and available on Google Fonts, so
+no custom font hosting is needed.
+
+| Role | Size (px) | Weight | Roundness |
+|----|----|----|----|
+| Result headline | 40 | 800 | 100 |
+| Screen and level title | 28 | 700 | 100 |
+| HUD numbers | 20 | 700 | 100 |
+| Buttons | 16--20 | 700 | 100 |
+| Body and panels | 14 | 500 | 0--40 |
+| Captions | 12 | 500 | 0 |
+
+Rules:
+
+-   Display text (headline, titles, HUD numbers, buttons) uses high
+    roundness. Body text keeps low roundness so small text stays crisp.
+-   Match the display weight and roundness to the logo.
+-   Optical size follows the font size (`font-optical-sizing: auto` on
+    the web).
+-   Button labels are white with a 2px ink-navy outline.
+-   Font stack: Google Sans Flex, then system-ui, then sans-serif.
+-   Support for tabular figures was not verified. If HUD numbers shift
+    width as they change, test the font's tabular-number feature or set
+    a fixed width for the counters.
+
+### 14.8 Phase visual modes
+
+Each gameplay phase has a visual mode. The theme assignment below is
+proposed (see 24.2 and 24.3): the lit and unlit building states are the
+main feedback in Activation and Simulation, and they are much clearer at
+night (see 14.10).
+
+#### 14.8.1 Placement mode (Day theme)
+
+-   Nothing is powered in this phase (3.3), so every fixed building uses
+    its unlit state, with no status bubbles.
+-   Each road network shows its letter badge (A to D) in its network
+    color.
+-   Placed generators show the power-yellow body with an outline. A
+    connected generator carries its network badge. A valid but
+    disconnected generator has no badge.
+-   Required information: inventory by type, per-network capacity
+    (generation, demand, surplus), objectives, solver button, proceed
+    control.
+-   Hover feedback follows 14.9.
+
+#### 14.8.2 Activation mode (Night theme)
+
+-   Switching from Placement to Activation switches the theme from Day
+    to Night, and going back switches it again. The transition effect is
+    defined in Figma.
+-   Buildings are unlit by default and become lit when active.
+-   Streetlamps are on.
+-   A connected building that is inactive shows the unpowered status
+    bubble. A building that cannot be activated because remaining
+    capacity is too low, and a building with no road connection, each
+    have a distinct indicator. The icons are defined in Figma.
+-   Each network shows its remaining capacity.
+-   Generators are locked; no placement hover feedback appears.
+-   Required information and controls follow 14.2: building panel with
+    activate and deactivate, back, reset, and proceed.
+
+#### 14.8.3 Simulation mode (Night theme)
+
+-   Starts from the final activation state.
+-   Powered buildings play a transition from unlit to lit. Unpowered
+    buildings stay unlit. Timing and sequencing are defined in Figma.
+-   The animation is presentation only (10.3). The result was already
+    compiled before it starts.
+-   No player input; back is disabled while it plays.
+-   The result screen follows the same Night theme, with a panel in the
+    panel-cream token showing objectives, score, stars, and a back
+    control to Activation.
+
+### 14.9 Visual state rules
+
+These rules hold in both themes.
+
+-   **Placement hover:**
+    -   Valid and connected: ghost footprint with a solid white outline
+        and the target network's letter badge.
+    -   Valid and disconnected: white dashed outline, no badge.
+    -   Invalid: solid alert-red fill with a white outline and a white X
+        icon.
+-   **Network identity:** carried by filled letter badges (A to D) with
+    a white border, not by thin colored outlines. The MVP supports at
+    most four road networks per level.
+-   **Meaning is never carried by color alone:** states also use shape,
+    line style, an icon, or a letter.
+-   **Reserved colors:** alert red marks invalid actions and errors.
+    Power yellow marks generators, lit windows, and highlights.
+-   **Buildings:** every building has the outline token. Lit buildings
+    use the lit tokens and yellow windows. Unlit buildings use the unlit
+    tokens and dark windows.
+-   **Restricted terrain:** trees and water use the tree and water
+    tokens.
+
+### 14.10 Known contrast limitations
+
+These values were calculated (WCAG contrast ratios). Figma should
+address the day-theme items.
+
+-   **Day network colors:** about 1.1 to 2.0 to 1 against the day grass,
+    and about 1.6 to 2.8 to 1 against the day asphalt. Orange is the
+    weakest. The filled badge with a white border is therefore required,
+    and thin network-colored outlines must not be used in the day theme.
+-   **Day badge letters:** white letters reach about 3.9 (A), 2.3 (B),
+    4.2 (C), and 2.6 (D) to 1. Ink navy reaches about 3.1, 5.2, 2.9, and
+    4.6 to 1. The best choice per color is white on A and C, navy on B
+    and D, and A and C still fall below 4.5 to 1. Darker day values for
+    A and C, or larger letters, are needed.
+-   **Day lit and unlit walls:** only about 1.3 to 1 apart. In the day
+    theme the difference would rely on roof saturation and the yellow
+    window, so the day theme is not used for the phases where the
+    difference matters.
+-   **Alert red against grass:** about 1.6 to 1 in the night theme, so
+    the invalid marker is a solid fill with a white icon, not a red
+    outline.
+-   **Star on against panel cream:** about 1.8 to 2 to 1. Star icons
+    need a navy outline.
+-   **Night theme values:** network colors are at least 3 to 1 against
+    the night grass and about 5.8 to 6.2 to 1 against the night asphalt.
+    Lit and unlit walls are about 7.6 to 1 apart. The unlit wall against
+    the grass is only about 1.6 to 1, so the outline token (about 2.7 to
+    1 against the grass) is required. Badge letters in the night outline
+    color reach about 8.1 to 8.8 to 1.
 
 ## 15. Level Data and Validation
 
@@ -920,7 +1199,8 @@ Validate level data when loading it. At minimum, check:
     requires it to be powered (for example `allBuildingsPowered`, or a
     `buildingPowered` reference to it). This is primarily a
     level-production rule; the validator enforces it as a safety net.
--   The level contains at least one road network.
+-   The level contains at least one road network and at most four
+    (visual palette limit).
 
 Invalid level data must produce a clear development-time/load-time error
 rather than causing undefined gameplay behavior. Both buildings with
@@ -941,6 +1221,8 @@ scaffolded):
 | Grid rendering | CSS Grid |
 | State management | Zustand |
 | Styling | Tailwind CSS |
+| Theming | CSS custom properties per theme (`data-theme`), see 14.6 |
+| Typography | Google Sans Flex (variable font), see 14.7 |
 | Runtime data validation | Zod |
 | Unit testing | Vitest |
 | Package manager | pnpm |
@@ -1005,6 +1287,8 @@ src/
 │       ├── heuristics.ts
 │       ├── optimizer.ts
 │       └── solver.ts
+├── styles/
+│   └── tokens.css            # Day and Night CSS custom properties
 ├── stores/
 │   └── gameStore.ts
 ├── workers/
@@ -1223,6 +1507,7 @@ The MVP includes automated tests for at least the following.
     -   Statistics and benchmark script
 7.  **UI implementation and polish**
     -   Implement the Figma design
+    -   Day and Night themes and the phase visual modes (14.8)
     -   Simulation animation
     -   Solver help interface
     -   Approximately 5--10 campaign levels
@@ -1307,8 +1592,10 @@ These core rules must not drift between UI, engine, solver, and tests:
 19. The CSP solver obeys exactly the same rules as gameplay.
 20. All campaign levels are unlocked from the beginning.
 21. Solver assistance has no score penalty.
+22. Meaning is never carried by color alone: placement states and
+    network identity also use shape, line style, an icon, or a letter.
 
-## 24. Resolved Decisions and Assumptions
+## 24. Resolved Decisions, Assumptions, and Open Items
 
 ### 24.1 Resolved decisions
 
@@ -1339,8 +1626,34 @@ These core rules must not drift between UI, engine, solver, and tests:
 -   Best result ordering is stars then score, and only completed
     results are saved.
 -   Undo is excluded from the MVP engine unless Figma includes it.
+-   Visual mode per phase: Placement uses the Day theme, Activation
+    and Simulation use the Night theme, and the result screen follows
+    Simulation.
+-   In Placement all fixed buildings are shown in the unlit state
+    without status bubbles, since nothing is powered.
+-   MVP levels have at most four road networks.
+
+### 24.3 Open design items
+
+-   **Day palette contrast:** network colors, badge letters, and star
+    icons are weak in the day theme (14.10). Adjusted values are
+    needed.
+-   **Logo values:** the weight and roundness used in the logo are
+    needed to align the display text.
 
 ## 25. Revision History
+
+**Revision 4** changes relative to revision 3:
+
+-   Added the visual design baseline (14.5 to 14.10): Day and Night
+    color tokens with CSS variables, Google Sans Flex typography, the
+    three phase visual modes, visual state rules, and verified contrast
+    limitations.
+-   Added the theme and typography rows to the technical stack, a
+    `styles/tokens.css` file to the project structure, and a four-network
+    limit to level validation.
+-   Added the visual mode assumptions and open design items to section
+    24.
 
 **Revision 3** changes relative to revision 2:
 

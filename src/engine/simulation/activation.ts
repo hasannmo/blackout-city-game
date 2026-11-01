@@ -96,10 +96,11 @@ export function goBack(state: GameState): GameState {
       activeBuildingIds: new Set(),
     }
   }
-  if (state.phase === 'result') {
+  if (state.phase === 'simulation' || state.phase === 'result') {
     return {
       ...state,
       phase: 'activation',
+      result: null,
     }
   }
   return state

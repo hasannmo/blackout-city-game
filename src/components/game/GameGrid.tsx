@@ -99,7 +99,9 @@ export const GameGrid: React.FC = () => {
               toggleBuildingActivation(buildingInfo.id)
             }
           }}
-          className="relative w-24 h-24 border border-black/10 flex items-center justify-center cursor-pointer transition-all overflow-hidden"
+          className={`relative w-24 h-24 border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
+            buildingInfo && gameState.phase !== 'placement' ? 'z-20' : ''
+          }`}
           style={{
             backgroundColor: isRoad ? 'var(--asphalt)' : defaultGrassBg,
           }}
@@ -127,7 +129,7 @@ export const GameGrid: React.FC = () => {
               />
               {/* Status Indicator Bubble during Activation / Simulation */}
               {gameState.phase !== 'placement' && (
-                <div className="absolute -top-1 -right-1 z-20 w-7 h-7 rounded-full bg-white border-2 border-[var(--outline)] flex items-center justify-center shadow-md">
+                <div className="absolute top-1 right-1 z-30 w-7 h-7 rounded-full bg-white border-2 border-[var(--outline)] flex items-center justify-center shadow-lg">
                   {gameState.activeBuildingIds.has(buildingInfo.id) ? (
                     <img src="/icons/zap.svg" alt="Powered" className="w-4 h-4 text-amber-500" />
                   ) : (

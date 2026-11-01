@@ -30,7 +30,7 @@ export const PlacementBar: React.FC = () => {
         )}
       </div>
 
-      {/* Center: Inventory Cards or Phase Instructions */}
+      {/* Center: Generator Inventory in zap currency */}
       <div className="flex items-center gap-4">
         {isPlacement && (
           <>
@@ -44,21 +44,22 @@ export const PlacementBar: React.FC = () => {
                 <button
                   key={typeId}
                   onClick={() => selectType(typeId)}
-                  className={`flex items-center gap-3 px-4 py-2 rounded-2xl border-2 border-[var(--outline)] transition transform active:scale-95 ${
+                  className={`flex items-center gap-3.5 px-5 py-2.5 rounded-2xl border-2 border-[var(--outline)] transition transform active:scale-95 ${
                     isSelected
                       ? 'bg-[var(--power-yellow)] shadow-[0_4px_0_var(--outline)] -translate-y-1'
                       : 'bg-white hover:bg-amber-50'
                   }`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-amber-200 border-2 border-[var(--outline)] flex items-center justify-center">
-                    <img src="/icons/zap.svg" alt="Generator" className="w-6 h-6 text-[var(--ink)]" />
+                  <div className="w-11 h-11 rounded-xl bg-amber-200 border-2 border-[var(--outline)] flex items-center justify-center">
+                    <img src="/icons/zap.svg" alt="Generator" className="w-7 h-7 text-[var(--ink)]" />
                   </div>
                   <div className="text-left">
                     <span className="block text-xs font-black text-[var(--ink)]">
                       {def?.name ?? typeId}
                     </span>
-                    <span className="block text-[11px] font-bold text-gray-600">
-                      Output: {def?.output} kW
+                    <span className="flex items-center gap-1 text-[11px] font-bold text-gray-700">
+                      Output: <strong>{def?.output}</strong>
+                      <img src="/icons/zap.svg" alt="zap" className="w-3.5 h-3.5 inline" />
                     </span>
                     <span className="block text-[10px] font-extrabold text-amber-900">
                       Available: {remaining} / {totalCount}
@@ -73,10 +74,10 @@ export const PlacementBar: React.FC = () => {
         {isActivation && (
           <div className="text-center">
             <span className="text-sm font-black text-[var(--ink)] block">
-              Tap connected buildings to toggle power
+              Tap connected house to activate electricity
             </span>
             <span className="text-xs text-gray-600">
-              Auto-activation has powered all networks within budget.
+              Auto-activation has allocated generation to connected demand.
             </span>
           </div>
         )}
@@ -108,11 +109,10 @@ export const PlacementBar: React.FC = () => {
             className="flex items-center gap-2 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-6 py-2.5 rounded-2xl font-black shadow-[0_4px_0_var(--btn-green-rim)]"
           >
             <span>SIMULATE</span>
-            <img src="/icons/zap-plain.svg" alt="Simulate" className="w-5 h-5" />
+            <img src="/icons/zap.svg" alt="Simulate" className="w-5 h-5" />
           </button>
         )}
       </div>
     </footer>
   )
 }
-

@@ -1,47 +1,37 @@
 import { describe, it, expect } from 'vitest'
-import exampleLevel from '../../src/data/campaign/level-01.json'
+import level1Data from '../../src/data/campaign/level-01.json'
 import buildingDefinitions from '../../src/data/buildings.json'
 import { LevelDefinitionSchema, BuildingDefinitionsMapSchema, type GameState } from '../../src/types'
 import { buildLevelIndex } from '../../src/engine/connectivity/networkAssignment'
 import { evaluatePlacement } from '../../src/engine/placement/evaluatePlacement'
 import { placeGenerator } from '../../src/engine/placement/generatorActions'
 import { computeCapacityReport } from '../../src/engine/simulation/capacity'
-import { enterActivation, activateBuilding } from '../../src/engine/simulation/activation'
+import { enterActivation } from '../../src/engine/simulation/activation'
 import { runSimulation } from '../../src/engine/simulation/runSimulation'
 
-describe('Level 1 Gameplay Rules & Simulation', () => {
-  it('validates level 1 JSON against schemas', () => {
-    const parsedLevel = LevelDefinitionSchema.parse(exampleLevel)
+describe('Level 1: 4x4 Grid with House, Tree, L-Road Layout & 5-Zap Generator', () => {
+  it('validates 4x4 level 1 JSON against schemas', () => {
+    const parsedLevel = LevelDefinitionSchema.parse(level1Data)
     const parsedBuildings = BuildingDefinitionsMapSchema.parse(buildingDefinitions)
     expect(parsedLevel.id).toBe('level-01')
-    expect(parsedBuildings.generator.output).toBe(8)
+    expect(parsedLevel.grid.width).toBe(4)
+    expect(parsedLevel.grid.height).toBe(4)
+    expect(parsedBuildings.generator.output).toBe(5)
   })
 
-  it('rejects 1x1 generator bridging two distinct road components at (4,2)', () => {
-    const index = buildLevelIndex(exampleLevel as any, buildingDefinitions as any)
-    const emptyGenerators: any[] = []
+  it('verifies level 1 layout and connectivity with e | r | e | e on last row', () => {
+    const index = buildLevelIndex(level1Data as any, buildingDefinitions as any)
+    // 4 road cells: (1,2), (2,2), (3,2) and (1,3) connected together in one single network A
+    expect(index.roadComponents).toHaveLength(1)
+    expect(index.roadComponents[0].id).toBe('A')
+    expect(index.roadComponents[0].cells).toHaveLength(4)
 
-    // (4,2) is between road cell (3,2) in A and (5,2) in B
-    const evalRes = evaluatePlacement(index, emptyGenerators, 'small_generator', { x: 4, y: 2 })
-    expect(evalRes.valid).toBe(false)
-    if (!evalRes.valid) {
-      expect(evalRes.reason).toBe('multi_network')
-    }
+    // House at (2,1) is adjacent to road at (2,2) -> assigned to network A
+    expect(index.buildingToNetworkId.get('b1')).toBe('A')
   })
 
-  it('allows valid placement touching exactly one network', () => {
-    const index = buildLevelIndex(exampleLevel as any, buildingDefinitions as any)
-    // Place small generator at (0, 1) adjacent to road (0, 2) in network A
-    const evalRes = evaluatePlacement(index, [], 'small_generator', { x: 0, y: 1 })
-    expect(evalRes.valid).toBe(true)
-    if (evalRes.valid) {
-      expect(evalRes.connected).toBe(true)
-      expect(evalRes.networkId).toBe('A')
-    }
-  })
-
-  it('plays through 3-star solution matching spec 15.3', () => {
-    const index = buildLevelIndex(exampleLevel as any, buildingDefinitions as any)
+  it('successfully places generator (output 5 zap) and powers the house', () => {
+    const index = buildLevelIndex(level1Data as any, buildingDefinitions as any)
     let state: GameState = {
       phase: 'placement',
       generators: [],
@@ -49,41 +39,35 @@ describe('Level 1 Gameplay Rules & Simulation', () => {
       result: null,
     }
 
-    // Generator (2x2, output 8) placed on Network B at (5, 3) adjacent to road (5, 2)
-    const place1 = placeGenerator(index, state, 'generator', { x: 5, y: 3 })
-    expect(place1.success).toBe(true)
-    if (place1.success) state = place1.newState
+    // Place generator at (0, 2) adjacent to road cell (1, 2) in network A
+    const evalRes = evaluatePlacement(index, state.generators, 'generator', { x: 0, y: 2 })
+    expect(evalRes.valid).toBe(true)
+    if (evalRes.valid) {
+      expect(evalRes.connected).toBe(true)
+      expect(evalRes.networkId).toBe('A')
+    }
 
-    // Small Generator (1x1, output 3) placed on Network A at (0, 1) adjacent to road (0, 2)
-    const place2 = placeGenerator(index, state, 'small_generator', { x: 0, y: 1 })
-    expect(place2.success).toBe(true)
-    if (place2.success) state = place2.newState
+    const placeRes = placeGenerator(index, state, 'generator', { x: 0, y: 2 })
+    expect(placeRes.success).toBe(true)
+    if (placeRes.success) state = placeRes.newState
 
-    // Check capacity: Network A has 3 gen, 4 demand -> surplus -1 (canPowerAll = false)
-    // Network B has 8 gen, 5 demand -> surplus +3 (canPowerAll = true)
+    // Check capacity: Network A output is 5 zap, demand is 2 zap -> surplus +3 zap, canPowerAll = true
     const cap = computeCapacityReport(index, state)
-    expect(cap.get('A')?.canPowerAll).toBe(false)
-    expect(cap.get('B')?.canPowerAll).toBe(true)
+    expect(cap.get('A')?.generation).toBe(5)
+    expect(cap.get('A')?.demand).toBe(2)
+    expect(cap.get('A')?.surplus).toBe(3)
+    expect(cap.get('A')?.canPowerAll).toBe(true)
 
-    // Enter activation: Network B auto-activates hospital 'b3'
+    // Enter activation -> auto-powers house 'b1'
     state = enterActivation(index, state)
     expect(state.phase).toBe('activation')
-    expect(state.activeBuildingIds.has('b3')).toBe(true)
-    expect(state.activeBuildingIds.has('b1')).toBe(false)
-    expect(state.activeBuildingIds.has('b2')).toBe(false)
-
-    // Player manually activates b2 (house with score 15, demand 2 <= 3 remaining)
-    const act = activateBuilding(index, state, 'b2')
-    expect(act.success).toBe(true)
-    if (act.success) state = act.newState
+    expect(state.activeBuildingIds.has('b1')).toBe(true)
 
     // Run simulation
-    const result = runSimulation(index, state)
-    expect(result.completed).toBe(true)
-    expect(result.mandatoryMet).toBe(true)
-    // Hospital score 40 + House b2 score 15 = 55 points -> 3 stars!
-    expect(result.score).toBe(55)
-    expect(result.stars).toBe(3)
+    const sim = runSimulation(index, state)
+    expect(sim.completed).toBe(true)
+    expect(sim.mandatoryMet).toBe(true)
+    expect(sim.score).toBe(10)
+    expect(sim.stars).toBe(3)
   })
 })
-

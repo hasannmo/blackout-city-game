@@ -12,7 +12,10 @@ import { placeGenerator, moveGenerator, removeGenerator, resetLevel } from '../e
 import { enterActivation, activateBuilding, deactivateBuilding, goBack } from '../engine/simulation/activation'
 import { runSimulation } from '../engine/simulation/runSimulation'
 
+export type AppScreen = 'home' | 'level-select' | 'game'
+
 interface GameStore {
+  currentScreen: AppScreen
   level: LevelDefinition
   buildingDefinitions: BuildingDefinitionsMap
   levelIndex: LevelIndex
@@ -21,7 +24,10 @@ interface GameStore {
   hoverCoordinate: Coordinate | null
   toastMessage: string | null
 
-  // Actions
+  // Screen Actions
+  setScreen: (screen: AppScreen) => void
+
+  // Game Actions
   selectInventoryType: (typeId: string | null) => void
   setHoverCoordinate: (coord: Coordinate | null) => void
   placeGeneratorAt: (coord: Coordinate) => void
@@ -40,6 +46,7 @@ const initialDefs = buildingDefinitionsData as unknown as BuildingDefinitionsMap
 const initialIndex = buildLevelIndex(initialLevel, initialDefs)
 
 export const useGameStore = create<GameStore>((set, get) => ({
+  currentScreen: 'home',
   level: initialLevel,
   buildingDefinitions: initialDefs,
   levelIndex: initialIndex,
@@ -49,9 +56,13 @@ export const useGameStore = create<GameStore>((set, get) => ({
     activeBuildingIds: new Set<string>(),
     result: null,
   },
-  selectedInventoryType: 'small_generator',
+  selectedInventoryType: 'generator',
   hoverCoordinate: null,
   toastMessage: null,
+
+  setScreen: (screen) => {
+    set({ currentScreen: screen })
+  },
 
   selectInventoryType: (typeId) => {
     set({ selectedInventoryType: typeId })

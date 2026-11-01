@@ -7,53 +7,12 @@
     "demand": 2,
     "output": 0
   },
-  "apartment": {
-    "name": "Apartment",
-    "category": "residential",
-    "width": 2,
-    "height": 2,
-    "demand": 6,
-    "output": 0
-  },
-  "small_shop": {
-    "name": "Small Shop",
-    "category": "commercial",
-    "width": 1,
-    "height": 1,
-    "demand": 3,
-    "output": 0
-  },
-  "shopping_mall": {
-    "name": "Shopping Mall",
-    "category": "commercial",
-    "width": 2,
-    "height": 2,
-    "demand": 7,
-    "output": 0
-  },
-  "small_hospital": {
-    "name": "Small Hospital",
-    "category": "hospital",
-    "width": 2,
-    "height": 2,
-    "demand": 5,
-    "output": 0
-  },
-  "small_generator": {
-    "name": "Small Generator",
-    "category": "generator",
-    "width": 1,
-    "height": 1,
-    "demand": 0,
-    "output": 3
-  },
   "generator": {
     "name": "Generator",
     "category": "generator",
-    "width": 2,
-    "height": 2,
+    "width": 1,
+    "height": 1,
     "demand": 0,
-    "output": 8
+    "output": 5
   }
 }
-

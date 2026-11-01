@@ -7,14 +7,22 @@ export const GameHUD: React.FC = () => {
   const gameState = useGameStore((s) => s.gameState)
   const levelIndex = useGameStore((s) => s.levelIndex)
   const resetCurrentLevel = useGameStore((s) => s.resetCurrentLevel)
+  const setScreen = useGameStore((s) => s.setScreen)
 
   const capacityReport = computeCapacityReport(levelIndex, gameState)
   const activationReport = computeActivationReport(levelIndex, gameState)
 
   return (
     <header className="w-full flex items-center justify-between px-6 py-3 select-none">
-      {/* Left: Level Info & Objectives */}
+      {/* Left: Level Info & Level Select Navigation */}
       <div className="flex items-center gap-4 bg-[var(--panel)] px-4 py-2 rounded-2xl border-2 border-[var(--outline)] shadow-md">
+        <button
+          onClick={() => setScreen('level-select')}
+          className="p-1.5 hover:bg-amber-100 rounded-xl transition"
+          title="Back to Level Selector"
+        >
+          <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5 text-[var(--ink)]" />
+        </button>
         <div>
           <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">Campaign</span>
           <h1 className="text-lg font-black leading-none text-[var(--ink)]">{level.name}</h1>
@@ -27,7 +35,7 @@ export const GameHUD: React.FC = () => {
         </div>
       </div>
 
-      {/* Center: Network Capacities */}
+      {/* Center: Network Capacities in In-Game Zap Currency */}
       <div className="flex items-center gap-3">
         {levelIndex.roadComponents.map((comp) => {
           const cap = capacityReport.get(comp.id)
@@ -42,7 +50,7 @@ export const GameHUD: React.FC = () => {
           return (
             <div
               key={comp.id}
-              className="flex items-center gap-2 bg-[var(--panel)] px-3 py-1.5 rounded-xl border-2 border-[var(--outline)] shadow-sm"
+              className="flex items-center gap-2.5 bg-[var(--panel)] px-3.5 py-1.5 rounded-xl border-2 border-[var(--outline)] shadow-sm"
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center font-black text-sm text-white shadow"
@@ -50,15 +58,20 @@ export const GameHUD: React.FC = () => {
               >
                 {comp.id}
               </div>
-              <div className="text-xs font-bold flex flex-col leading-tight">
+              <div className="text-xs font-bold flex items-center gap-1 leading-tight text-[var(--ink)]">
                 {isActivation ? (
-                  <span>
-                    Remaining: <strong className="text-sm">{act?.remaining ?? 0}</strong> kW
-                  </span>
+                  <>
+                    <span>Remaining:</span>
+                    <span className="text-sm font-black text-amber-900">{act?.remaining ?? 0}</span>
+                    <img src="/icons/zap.svg" alt="zap" className="w-4 h-4 inline" />
+                  </>
                 ) : (
-                  <span>
-                    Output: <strong>{cap?.generation ?? 0}</strong> / {cap?.demand ?? 0} kW
-                  </span>
+                  <>
+                    <span>Output:</span>
+                    <span className="text-sm font-black text-amber-900">{cap?.generation ?? 0}</span>
+                    <span className="text-gray-500">/ {cap?.demand ?? 0}</span>
+                    <img src="/icons/zap.svg" alt="zap" className="w-4 h-4 inline" />
+                  </>
                 )}
               </div>
             </div>
@@ -80,4 +93,3 @@ export const GameHUD: React.FC = () => {
     </header>
   )
 }
-

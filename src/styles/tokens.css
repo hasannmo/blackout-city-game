@@ -1,0 +1,68 @@
+:root[data-theme="day"] {
+  --grass-light: #8ccb5e;
+  --grass-dark: #84c456;
+  --asphalt: #565e6c;
+  --curb: #cfc8b8;
+  --lane-paint: #f7f3e3;
+  --tree: #3e8e41;
+  --water: #5bb9e8;
+  --board-frame: #5e9b3a;
+  --wall-lit: #f6e7c8;
+  --roof-red-lit: #e4684f;
+  --roof-blue-lit: #4f8fd8;
+  --wall-unlit: #cfcac0;
+  --roof-unlit: #8f96a3;
+  --window-unlit: #6b7280;
+  --outline: #26355d;
+  --power-yellow: #ffd23f;
+  --streetlamp: #ffd98a;
+  --sky: #bfe6fa;
+  --panel: #fff7e3;
+  --ink: #26355d;
+  --btn-blue: #3ba7f5;
+  --btn-blue-rim: #1e78c8;
+  --btn-green: #6cc24a;
+  --btn-green-rim: #3e8e2a;
+  --alert: #e8453c;
+  --star-on: #e0a800;
+  --star-off: #b8c4cc;
+  --net-a: #2f80ed;
+  --net-b: #ff8c42;
+  --net-c: #8e5cf7;
+  --net-d: #ff6fa8;
+}
+
+:root[data-theme="night"] {
+  --grass-light: #2f6b52;
+  --grass-dark: #2a6049;
+  --asphalt: #2f3645;
+  --curb: #6b7385;
+  --lane-paint: #d8d2bc;
+  --tree: #1b4d35;
+  --water: #2a6ca6;
+  --board-frame: #1e4a39;
+  --wall-lit: #f2ddaa;
+  --roof-red-lit: #d2584a;
+  --roof-blue-lit: #4a7fc4;
+  --wall-unlit: #3a4156;
+  --roof-unlit: #2a3044;
+  --window-unlit: #20263a;
+  --outline: #161b30;
+  --power-yellow: #ffd23f;
+  --streetlamp: #ffd98a;
+  --sky: #232b5b;
+  --panel: #f4e8cc;
+  --ink: #26355d;
+  --btn-blue: #3ba7f5;
+  --btn-blue-rim: #1e78c8;
+  --btn-green: #6cc24a;
+  --btn-green-rim: #3e8e2a;
+  --alert: #e8453c;
+  --star-on: #e0a800;
+  --star-off: #b8b4a4;
+  --net-a: #7db9ff;
+  --net-b: #ffa45c;
+  --net-c: #c4a3ff;
+  --net-d: #ff9cc6;
+}
+

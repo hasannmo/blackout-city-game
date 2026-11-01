@@ -1,0 +1,45 @@
+{
+  "id": "level-01",
+  "name": "Two Districts",
+  "grid": { "width": 8, "height": 5 },
+  "roads": [
+    { "x": 0, "y": 2 },
+    { "x": 1, "y": 2 },
+    { "x": 2, "y": 2 },
+    { "x": 3, "y": 2 },
+    { "x": 5, "y": 2 },
+    { "x": 6, "y": 2 },
+    { "x": 7, "y": 2 }
+  ],
+  "terrain": [{ "x": 4, "y": 4 }],
+  "buildings": [
+    {
+      "id": "b1",
+      "variant": "house",
+      "origin": { "x": 1, "y": 1 },
+      "score": 10
+    },
+    {
+      "id": "b2",
+      "variant": "house",
+      "origin": { "x": 2, "y": 3 },
+      "score": 15
+    },
+    {
+      "id": "b3",
+      "variant": "small_hospital",
+      "origin": { "x": 5, "y": 0 },
+      "score": 40
+    }
+  ],
+  "inventory": { "small_generator": 1, "generator": 1 },
+  "objective": {
+    "type": "and",
+    "children": [
+      { "type": "categoryCount", "category": "hospital", "min": 1 },
+      { "type": "categoryCount", "category": "residential", "min": 1 }
+    ]
+  },
+  "stars": { "two": 40, "three": 55 }
+}
+

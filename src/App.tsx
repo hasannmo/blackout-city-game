@@ -4,6 +4,7 @@ import { HomeScreen } from "./components/screens/HomeScreen";
 import { LevelSelectorScreen } from "./components/screens/LevelSelectorScreen";
 import { GameHUD } from "./components/game/GameHUD";
 import { GameGrid } from "./components/game/GameGrid";
+import { StarTrackerPanel } from "./components/game/StarTrackerPanel";
 import { PlacementBar } from "./components/game/PlacementBar";
 import { ResultModal } from "./components/game/ResultModal";
 
@@ -54,8 +55,11 @@ export function App() {
       {/* Top HUD */}
       <GameHUD />
 
-      {/* Main City Grid */}
-      <GameGrid />
+      {/* Main Playing Area with Board and Live Star Tracker Panel */}
+      <div className="flex-1 flex items-center justify-center gap-8 px-8 py-2 overflow-hidden">
+        <GameGrid />
+        <StarTrackerPanel />
+      </div>
 
       {/* Bottom Placement & Navigation Bar */}
       <PlacementBar />

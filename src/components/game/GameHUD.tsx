@@ -4,21 +4,18 @@ import {
   computeCapacityReport,
   computeActivationReport,
 } from "../../engine/simulation/capacity";
-import { computeLiveStarState } from "../../engine/objectives/objectiveEvaluator";
 
 export const GameHUD: React.FC = () => {
   const level = useGameStore((s) => s.level);
-  const buildingDefinitions = useGameStore((s) => s.buildingDefinitions);
   const gameState = useGameStore((s) => s.gameState);
   const levelIndex = useGameStore((s) => s.levelIndex);
   const resetCurrentLevel = useGameStore((s) => s.resetCurrentLevel);
   const setScreen = useGameStore((s) => s.setScreen);
+  const showStarSidebar = useGameStore((s) => s.showStarSidebar);
+  const toggleStarSidebar = useGameStore((s) => s.toggleStarSidebar);
 
   const capacityReport = computeCapacityReport(levelIndex, gameState);
   const activationReport = computeActivationReport(levelIndex, gameState);
-
-  const { star1Satisfied, star2Satisfied, star3Satisfied } =
-    computeLiveStarState(level, buildingDefinitions, gameState.activeBuildingIds);
 
   return (
     <header className="w-full flex items-center justify-between px-6 py-3 select-none">
@@ -113,29 +110,21 @@ export const GameHUD: React.FC = () => {
         })}
       </div>
 
-      {/* Right: Live Compact Star Indicator & Reset */}
+      {/* Right: Sidebar Toggle & Reset */}
       <div className="flex items-center gap-3">
-        {/* Compact Star Indicator Pill */}
-        <div className="flex items-center gap-1.5 bg-[var(--panel)] border-2 border-[var(--outline)] px-3 py-1.5 rounded-xl shadow-sm">
-          {[
-            { id: 1, satisfied: star1Satisfied },
-            { id: 2, satisfied: star2Satisfied },
-            { id: 3, satisfied: star3Satisfied },
-          ].map((s) => (
-            <div
-              key={s.id}
-              className={`w-6 h-6 rounded-md flex items-center justify-center transition-all ${
-                s.satisfied ? "scale-110 drop-shadow" : "opacity-35 grayscale"
-              }`}
-            >
-              <img
-                src="/icons/star.svg"
-                alt={`Star ${s.id}`}
-                className="w-5 h-5"
-              />
-            </div>
-          ))}
-        </div>
+        {/* Toggle Star Requirements Sidebar Button */}
+        <button
+          onClick={toggleStarSidebar}
+          className={`flex items-center gap-1.5 border-2 border-[var(--outline)] px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm active:translate-y-0.5 ${
+            showStarSidebar
+              ? "bg-[var(--power-yellow)] text-amber-950"
+              : "bg-[var(--panel)] hover:bg-amber-100 text-[var(--ink)]"
+          }`}
+          title={showStarSidebar ? "Hide Objectives & Stars" : "Show Objectives & Stars"}
+        >
+          <img src="/icons/star.svg" alt="Stars" className="w-4 h-4" />
+          <span>{showStarSidebar ? "Hide Goals" : "Goals"}</span>
+        </button>
 
         <button
           onClick={resetCurrentLevel}

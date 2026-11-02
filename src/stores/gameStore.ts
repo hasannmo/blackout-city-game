@@ -36,9 +36,11 @@ interface GameStore {
   selectedInventoryType: string | null;
   hoverCoordinate: Coordinate | null;
   toastMessage: string | null;
+  showStarSidebar: boolean;
 
   // Screen Actions
   setScreen: (screen: AppScreen) => void;
+  toggleStarSidebar: () => void;
 
   // Game Actions
   selectInventoryType: (typeId: string | null) => void;
@@ -73,9 +75,14 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedInventoryType: "generator",
   hoverCoordinate: null,
   toastMessage: null,
+  showStarSidebar: true,
 
   setScreen: (screen) => {
     set({ currentScreen: screen });
+  },
+
+  toggleStarSidebar: () => {
+    set((state) => ({ showStarSidebar: !state.showStarSidebar }));
   },
 
   selectInventoryType: (typeId) => {

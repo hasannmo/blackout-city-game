@@ -63,7 +63,7 @@ export const GameGrid: React.FC = () => {
   // Buildings lookup
   const buildingCellsMap = new Map<
     string,
-    { id: string; variant: string; isOrigin: boolean }
+    { id: string; variant: string; isOrigin: boolean; demand: number }
   >();
   for (const b of level.buildings) {
     const def = levelIndex.buildingDefinitions[b.variant];
@@ -74,6 +74,7 @@ export const GameGrid: React.FC = () => {
         id: b.id,
         variant: b.variant,
         isOrigin: c.x === b.origin.x && c.y === b.origin.y,
+        demand: def.demand,
       });
     }
   }
@@ -113,7 +114,7 @@ export const GameGrid: React.FC = () => {
             }
           }}
           className={`relative w-24 h-24 border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
-            buildingInfo && gameState.phase !== "placement" ? "z-20" : ""
+            buildingInfo ? "z-20" : ""
           }`}
           style={{
             backgroundColor: isRoad ? "var(--asphalt)" : defaultGrassBg,
@@ -139,6 +140,7 @@ export const GameGrid: React.FC = () => {
                 variant={buildingInfo.variant}
                 isLit={gameState.activeBuildingIds.has(buildingInfo.id)}
                 isPowered={gameState.activeBuildingIds.has(buildingInfo.id)}
+                demand={buildingInfo.demand}
               />
               {/* Status Indicator Bubble during Activation / Simulation */}
               {gameState.phase !== "placement" && (

@@ -4,11 +4,26 @@ interface BuildingProps {
   variant: string;
   isLit: boolean;
   isPowered: boolean;
+  demand?: number;
 }
 
-export const BuildingSprite: React.FC<BuildingProps> = ({ isLit }) => {
+export const BuildingSprite: React.FC<BuildingProps> = ({ isLit, demand }) => {
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center p-1 select-none pointer-events-none">
+      {/* Power Demand Label Pill */}
+      {demand !== undefined && demand > 0 && (
+        <div
+          className={`absolute -top-1.5 left-1 z-30 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full border border-[var(--outline)] shadow-sm transition-all ${
+            isLit
+              ? "bg-[var(--power-yellow)] text-amber-950 font-black scale-105"
+              : "bg-white/95 text-[var(--ink)] font-extrabold"
+          }`}
+        >
+          <span className="text-[10px] leading-none">{demand}</span>
+          <img src="/icons/zap.svg" alt="demand" className="w-2.5 h-2.5 inline" />
+        </div>
+      )}
+
       {/* 2.5D Isometric Roof */}
       <div
         className="w-10 h-7 rounded-lg border-2 border-[var(--outline)] relative shadow-md transition-colors duration-300"
@@ -16,7 +31,7 @@ export const BuildingSprite: React.FC<BuildingProps> = ({ isLit }) => {
           backgroundColor: isLit ? "var(--roof-red-lit)" : "var(--roof-unlit)",
         }}
       >
-        {/* Roof ridge / highlight highlight */}
+        {/* Roof ridge / highlight */}
         <div className="absolute top-1 left-1.5 right-1.5 h-1.5 bg-white/25 rounded-sm" />
       </div>
 

@@ -13,6 +13,7 @@ export function App() {
   const gameState = useGameStore((s) => s.gameState);
   const toastMessage = useGameStore((s) => s.toastMessage);
   const dismissToast = useGameStore((s) => s.dismissToast);
+  const showStarSidebar = useGameStore((s) => s.showStarSidebar);
 
   // Manage Day / Night data-theme per spec 14.8
   useEffect(() => {
@@ -55,10 +56,10 @@ export function App() {
       {/* Top HUD */}
       <GameHUD />
 
-      {/* Main Playing Area with Board and Live Star Tracker Panel */}
-      <div className="flex-1 flex items-center justify-center gap-8 px-8 py-2 overflow-hidden">
+      {/* Main Playing Area with Board and Toggle-able Live Star Tracker Panel */}
+      <div className="flex-1 flex items-center justify-center gap-8 px-8 py-2 overflow-hidden transition-all duration-300">
         <GameGrid />
-        <StarTrackerPanel />
+        {showStarSidebar && <StarTrackerPanel />}
       </div>
 
       {/* Bottom Placement & Navigation Bar */}

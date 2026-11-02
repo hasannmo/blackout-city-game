@@ -1,0 +1,47 @@
+{
+  "id": "level-02",
+  "name": "Level 2",
+  "grid": { "width": 5, "height": 5 },
+  "roads": [
+    { "x": 1, "y": 1 },
+    { "x": 2, "y": 1 },
+    { "x": 3, "y": 1 },
+    { "x": 1, "y": 3 },
+    { "x": 2, "y": 3 },
+    { "x": 3, "y": 3 }
+  ],
+  "terrain": [
+    { "x": 2, "y": 2 },
+    { "x": 0, "y": 4 },
+    { "x": 4, "y": 0 }
+  ],
+  "buildings": [
+    {
+      "id": "h1",
+      "variant": "house",
+      "origin": { "x": 1, "y": 0 },
+      "score": 10
+    },
+    {
+      "id": "h2",
+      "variant": "house",
+      "origin": { "x": 3, "y": 0 },
+      "score": 10
+    },
+    {
+      "id": "h3",
+      "variant": "house",
+      "origin": { "x": 2, "y": 4 },
+      "score": 10
+    }
+  ],
+  "inventory": {
+    "generator": 2
+  },
+  "objective": {
+    "type": "minTotalPowered",
+    "min": 2
+  },
+  "stars": { "two": 20, "three": 30 }
+}
+

@@ -57,7 +57,7 @@ export function App() {
       <GameHUD />
 
       {/* Main Playing Area with Board and Toggle-able Live Star Tracker Panel */}
-      <div className="flex-1 flex items-center justify-center gap-8 px-8 py-2 overflow-hidden transition-all duration-300">
+      <div className="flex-1 min-h-0 flex items-center justify-center gap-6 px-4 py-2 overflow-hidden transition-all duration-300">
         <GameGrid />
         {showStarSidebar && <StarTrackerPanel />}
       </div>

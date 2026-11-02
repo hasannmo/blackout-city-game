@@ -1,0 +1,62 @@
+{
+  "id": "level-03",
+  "name": "Level 3",
+  "grid": { "width": 6, "height": 5 },
+  "roads": [
+    { "x": 1, "y": 1 },
+    { "x": 2, "y": 1 },
+    { "x": 1, "y": 2 },
+    { "x": 2, "y": 2 },
+    { "x": 4, "y": 2 },
+    { "x": 5, "y": 2 },
+    { "x": 4, "y": 3 },
+    { "x": 5, "y": 3 }
+  ],
+  "terrain": [
+    { "x": 3, "y": 2 },
+    { "x": 0, "y": 0 },
+    { "x": 5, "y": 0 },
+    { "x": 0, "y": 4 }
+  ],
+  "buildings": [
+    {
+      "id": "h1",
+      "variant": "house",
+      "origin": { "x": 1, "y": 0 },
+      "score": 10
+    },
+    {
+      "id": "h2",
+      "variant": "house",
+      "origin": { "x": 2, "y": 0 },
+      "score": 10
+    },
+    {
+      "id": "h3",
+      "variant": "house",
+      "origin": { "x": 1, "y": 3 },
+      "score": 10
+    },
+    {
+      "id": "h4",
+      "variant": "house",
+      "origin": { "x": 4, "y": 1 },
+      "score": 10
+    },
+    {
+      "id": "h5",
+      "variant": "house",
+      "origin": { "x": 4, "y": 4 },
+      "score": 10
+    }
+  ],
+  "inventory": {
+    "generator": 2
+  },
+  "objective": {
+    "type": "minTotalPowered",
+    "min": 3
+  },
+  "stars": { "two": 30, "three": 40 }
+}
+

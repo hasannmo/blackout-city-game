@@ -49,7 +49,7 @@ export const GameHUD: React.FC = () => {
       </div>
 
       {/* Center: Network Capacities in In-Game Zap Currency */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center max-w-xl">
         {levelIndex.roadComponents.map((comp) => {
           const cap = capacityReport.get(comp.id);
           const act = activationReport.get(comp.id);
@@ -69,38 +69,38 @@ export const GameHUD: React.FC = () => {
           return (
             <div
               key={comp.id}
-              className="flex items-center gap-2.5 bg-[var(--panel)] px-3.5 py-1.5 rounded-xl border-2 border-[var(--outline)] shadow-sm"
+              className="flex items-center gap-1.5 bg-[var(--panel)] px-2.5 py-1 rounded-xl border-2 border-[var(--outline)] shadow-xs"
             >
               <div
-                className="w-7 h-7 rounded-full flex items-center justify-center font-black text-sm text-white shadow"
+                className="w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center font-black text-xs text-white shadow-xs shrink-0"
                 style={{ backgroundColor: badgeBg }}
               >
                 {comp.id}
               </div>
-              <div className="text-xs font-bold flex items-center gap-1 leading-tight text-[var(--ink)]">
+              <div className="text-[11px] sm:text-xs font-bold flex items-center gap-1 leading-tight text-[var(--ink)] whitespace-nowrap">
                 {isActivation ? (
                   <>
-                    <span>Remaining:</span>
-                    <span className="text-sm font-black text-amber-900">
+                    <span className="hidden sm:inline">Left:</span>
+                    <span className="font-black text-amber-900">
                       {act?.remaining ?? 0}
                     </span>
                     <img
                       src="/icons/zap.svg"
                       alt="zap"
-                      className="w-4 h-4 inline"
+                      className="w-3.5 h-3.5 inline"
                     />
                   </>
                 ) : (
                   <>
-                    <span>Output:</span>
-                    <span className="text-sm font-black text-amber-900">
+                    <span className="hidden sm:inline">Out:</span>
+                    <span className="font-black text-amber-900">
                       {cap?.generation ?? 0}
                     </span>
-                    <span className="text-gray-500">/ {cap?.demand ?? 0}</span>
+                    <span className="text-gray-400">/{cap?.demand ?? 0}</span>
                     <img
                       src="/icons/zap.svg"
                       alt="zap"
-                      className="w-4 h-4 inline"
+                      className="w-3.5 h-3.5 inline"
                     />
                   </>
                 )}

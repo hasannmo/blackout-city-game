@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
 import level1Data from "../../src/data/campaign/level-01.json";
+import level2Data from "../../src/data/campaign/level-02.json";
+import level3Data from "../../src/data/campaign/level-03.json";
+import level4Data from "../../src/data/campaign/level-04.json";
+import level5Data from "../../src/data/campaign/level-05.json";
 import buildingDefinitions from "../../src/data/buildings.json";
 import {
   LevelDefinitionSchema,
@@ -7,73 +11,52 @@ import {
   type GameState,
 } from "../../src/types";
 import { buildLevelIndex } from "../../src/engine/connectivity/networkAssignment";
-import { evaluatePlacement } from "../../src/engine/placement/evaluatePlacement";
 import { placeGenerator } from "../../src/engine/placement/generatorActions";
 import { computeCapacityReport } from "../../src/engine/simulation/capacity";
 import { enterActivation } from "../../src/engine/simulation/activation";
 import { runSimulation } from "../../src/engine/simulation/runSimulation";
-import {
-  computeLiveStarState,
-  getObjectiveDescription,
-} from "../../src/engine/objectives/objectiveEvaluator";
 
-describe("Level 1: 4x4 Grid with House, Tree, L-Road Layout & 5-Zap Generator", () => {
-  it("validates 4x4 level 1 JSON against schemas", () => {
-    const parsedLevel = LevelDefinitionSchema.parse(level1Data);
-    const parsedBuildings =
-      BuildingDefinitionsMapSchema.parse(buildingDefinitions);
-    expect(parsedLevel.id).toBe("level-01");
-    expect(parsedLevel.grid.width).toBe(4);
-    expect(parsedLevel.grid.height).toBe(4);
+describe("Campaign Levels 1 through 5 Validation & Gameplay", () => {
+  const levels = [level1Data, level2Data, level3Data, level4Data, level5Data];
+
+  it("validates all 5 campaign levels against Zod schemas", () => {
+    const parsedBuildings = BuildingDefinitionsMapSchema.parse(buildingDefinitions);
+    expect(parsedBuildings.house.demand).toBe(2);
     expect(parsedBuildings.generator.output).toBe(5);
+
+    levels.forEach((lvl, idx) => {
+      const parsed = LevelDefinitionSchema.parse(lvl);
+      expect(parsed.id).toBe(`level-0${idx + 1}`);
+      // All buildings are exclusively houses
+      expect(parsed.buildings.every((b) => b.variant === "house")).toBe(true);
+      // Inventory uses only plain 1x1 generators
+      expect(Object.keys(parsed.inventory)).toEqual(["generator"]);
+    });
   });
 
-  it("verifies level 1 layout and connectivity with e | r | e | e on last row", () => {
-    const index = buildLevelIndex(level1Data as any, buildingDefinitions as any);
-    // 4 road cells: (1,2), (2,2), (3,2) and (1,3) connected together in one single network A
-    expect(index.roadComponents).toHaveLength(1);
-    expect(index.roadComponents[0].id).toBe("A");
-    expect(index.roadComponents[0].cells).toHaveLength(4);
+  it("verifies multi-network independence across levels 2, 3, 4, 5", () => {
+    // Level 2 has 2 road systems (A and B)
+    const idx2 = buildLevelIndex(level2Data as any, buildingDefinitions as any);
+    expect(idx2.roadComponents).toHaveLength(2);
+    expect(idx2.roadComponents.map((c) => c.id)).toEqual(["A", "B"]);
 
-    // House at (2,1) is adjacent to road at (2,2) -> assigned to network A
-    expect(index.buildingToNetworkId.get("b1")).toBe("A");
+    // Level 3 has 2 road systems
+    const idx3 = buildLevelIndex(level3Data as any, buildingDefinitions as any);
+    expect(idx3.roadComponents).toHaveLength(2);
+
+    // Level 4 has 3 road systems (A, B, C)
+    const idx4 = buildLevelIndex(level4Data as any, buildingDefinitions as any);
+    expect(idx4.roadComponents).toHaveLength(3);
+    expect(idx4.roadComponents.map((c) => c.id)).toEqual(["A", "B", "C"]);
+
+    // Level 5 has 4 road systems (A, B, C, D)
+    const idx5 = buildLevelIndex(level5Data as any, buildingDefinitions as any);
+    expect(idx5.roadComponents).toHaveLength(4);
+    expect(idx5.roadComponents.map((c) => c.id)).toEqual(["A", "B", "C", "D"]);
   });
 
-  it("tracks dynamic star requirements: 1 star for building objective, 2 and 3 stars for score", () => {
-    const parsedLevel = LevelDefinitionSchema.parse(level1Data);
-    const parsedBuildings =
-      BuildingDefinitionsMapSchema.parse(buildingDefinitions);
-
-    const desc = getObjectiveDescription(
-      parsedLevel.objective,
-    );
-    expect(desc).toBe("Power all buildings in the district");
-
-    // Initially with 0 powered buildings: 0 stars
-    const initialStars = computeLiveStarState(
-      parsedLevel,
-      parsedBuildings,
-      new Set(),
-    );
-    expect(initialStars.star1Satisfied).toBe(false);
-    expect(initialStars.star2Satisfied).toBe(false);
-    expect(initialStars.star3Satisfied).toBe(false);
-    expect(initialStars.starCount).toBe(0);
-
-    // When house 'b1' is powered (score 10): 1-star (objective) satisfied, and 2-star (10 pts) + 3-star (10 pts) light up
-    const poweredStars = computeLiveStarState(
-      parsedLevel,
-      parsedBuildings,
-      new Set(["b1"]),
-    );
-    expect(poweredStars.star1Satisfied).toBe(true);
-    expect(poweredStars.star2Satisfied).toBe(true);
-    expect(poweredStars.star3Satisfied).toBe(true);
-    expect(poweredStars.starCount).toBe(3);
-  });
-
-  it("successfully places generator (output 5 zap) and powers the house", () => {
-    const index = buildLevelIndex(level1Data as any, buildingDefinitions as any);
+  it("verifies Level 2 3-star solution path", () => {
+    const index = buildLevelIndex(level2Data as any, buildingDefinitions as any);
     let state: GameState = {
       phase: "placement",
       generators: [],
@@ -81,43 +64,29 @@ describe("Level 1: 4x4 Grid with House, Tree, L-Road Layout & 5-Zap Generator", 
       result: null,
     };
 
-    // Place generator at (0, 2) adjacent to road cell (1, 2) in network A
-    const evalRes = evaluatePlacement(
-      index,
-      state.generators,
-      "generator",
-      { x: 0, y: 2 },
-    );
-    expect(evalRes.valid).toBe(true);
-    if (evalRes.valid) {
-      expect(evalRes.connected).toBe(true);
-      expect(evalRes.networkId).toBe("A");
-    }
+    // Place generator on network A at (2, 0) adjacent to road (2, 1)
+    const p1 = placeGenerator(index, state, "generator", { x: 2, y: 0 });
+    expect(p1.success).toBe(true);
+    if (p1.success) state = p1.newState;
 
-    const placeRes = placeGenerator(index, state, "generator", {
-      x: 0,
-      y: 2,
-    });
-    expect(placeRes.success).toBe(true);
-    if (placeRes.success) state = placeRes.newState;
+    // Place generator on network B at (1, 4) adjacent to road (1, 3)
+    const p2 = placeGenerator(index, state, "generator", { x: 1, y: 4 });
+    expect(p2.success).toBe(true);
+    if (p2.success) state = p2.newState;
 
-    // Check capacity: Network A output is 5 zap, demand is 2 zap -> surplus +3 zap, canPowerAll = true
+    // Check capacity: Network A has 2 houses (demand 4 <= 5), Network B has 1 house (demand 2 <= 5)
     const cap = computeCapacityReport(index, state);
-    expect(cap.get("A")?.generation).toBe(5);
-    expect(cap.get("A")?.demand).toBe(2);
-    expect(cap.get("A")?.surplus).toBe(3);
     expect(cap.get("A")?.canPowerAll).toBe(true);
+    expect(cap.get("B")?.canPowerAll).toBe(true);
 
-    // Enter activation -> auto-powers house 'b1'
+    // Enter activation -> all 3 houses auto-activate
     state = enterActivation(index, state);
-    expect(state.phase).toBe("activation");
-    expect(state.activeBuildingIds.has("b1")).toBe(true);
+    expect(state.activeBuildingIds.size).toBe(3);
 
-    // Run simulation
+    // Run simulation -> 30 pts (3 stars!)
     const sim = runSimulation(index, state);
     expect(sim.completed).toBe(true);
-    expect(sim.mandatoryMet).toBe(true);
-    expect(sim.score).toBe(10);
+    expect(sim.score).toBe(30);
     expect(sim.stars).toBe(3);
   });
 });

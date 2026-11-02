@@ -4,11 +4,13 @@ import { useGameStore } from "../../stores/gameStore";
 export const ResultModal: React.FC = () => {
   const gameState = useGameStore((s) => s.gameState);
   const navigateBack = useGameStore((s) => s.navigateBack);
-  const resetLevel = useGameStore((s) => s.resetCurrentLevel);
+  const nextLevel = useGameStore((s) => s.nextLevel);
+  const hasNextLevel = useGameStore((s) => s.hasNextLevel);
 
   if (gameState.phase !== "simulation" || !gameState.result) return null;
 
   const { completed, score, stars } = gameState.result;
+  const canProceedToNext = completed && hasNextLevel();
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -55,17 +57,41 @@ export const ResultModal: React.FC = () => {
 
         {/* Action Buttons */}
         <div className="flex items-center gap-4 w-full">
+          {/* Adjust Button */}
           <button
             onClick={navigateBack}
             className="flex-1 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white py-3 rounded-2xl font-black shadow-[0_4px_0_var(--btn-blue-rim)]"
           >
             ADJUST
           </button>
+
+          {/* Next Level Button */}
           <button
-            onClick={resetLevel}
-            className="flex-1 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white py-3 rounded-2xl font-black shadow-[0_4px_0_var(--btn-green-rim)]"
+            onClick={() => {
+              if (canProceedToNext) {
+                nextLevel();
+              }
+            }}
+            disabled={!canProceedToNext}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-black border-2 border-[var(--outline)] transition-all ${
+              canProceedToNext
+                ? "bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 text-white shadow-[0_4px_0_var(--btn-green-rim)] cursor-pointer"
+                : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed opacity-60 shadow-none"
+            }`}
+            title={
+              !completed
+                ? "Complete objectives to unlock next level"
+                : !hasNextLevel()
+                  ? "This is the last accessible level"
+                  : "Proceed to Next Level"
+            }
           >
-            PLAY AGAIN
+            <span>NEXT LEVEL</span>
+            <img
+              src="/icons/arrow-right.svg"
+              alt="Next"
+              className={`w-4 h-4 ${canProceedToNext ? "text-white" : "text-gray-400 opacity-60"}`}
+            />
           </button>
         </div>
       </div>

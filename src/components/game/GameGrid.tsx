@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import { evaluatePlacement } from "../../engine/placement/evaluatePlacement";
 import { getFootprintCells, cellKey } from "../../engine/grid/footprint";
@@ -20,8 +20,17 @@ export const GameGrid: React.FC = () => {
     (s) => s.toggleBuildingActivation,
   );
 
+  const [zoom, setZoom] = useState<number>(1);
+
+  const handleZoomIn = () => setZoom((z) => Math.min(1.5, Number((z + 0.1).toFixed(1))));
+  const handleZoomOut = () => setZoom((z) => Math.max(0.6, Number((z - 0.1).toFixed(1))));
+  const handleResetZoom = () => setZoom(1);
+
   const width = level.grid.width;
   const height = level.grid.height;
+
+  // Adapt base cell size depending on board dimension so larger grids (e.g. 7x7) fit elegantly
+  const cellSizeClass = width > 5 ? "w-20 h-20" : "w-24 h-24";
 
   // Compute ghost placement preview if in placement phase
   let ghostValid: boolean | null = null;
@@ -113,7 +122,7 @@ export const GameGrid: React.FC = () => {
               toggleBuildingActivation(buildingInfo.id);
             }
           }}
-          className={`relative w-24 h-24 border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
+          className={`relative ${cellSizeClass} border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
             buildingInfo ? "z-20" : ""
           }`}
           style={{
@@ -196,17 +205,53 @@ export const GameGrid: React.FC = () => {
   }
 
   return (
-    <div
-      className="flex-1 flex items-center justify-center p-4"
-      onMouseLeave={() => setHoverCoordinate(null)}
-    >
+    <div className="relative flex-1 min-h-0 w-full h-full flex flex-col items-center justify-center overflow-hidden">
+      {/* Floating Zoom Controls */}
+      <div className="absolute top-2 right-2 z-40 flex items-center gap-1.5 bg-[var(--panel)]/95 backdrop-blur-xs p-1.5 rounded-2xl border-2 border-[var(--outline)] shadow-lg select-none">
+        <button
+          onClick={handleZoomOut}
+          className="w-7 h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-sm border border-[var(--outline)] transition active:scale-95"
+          title="Zoom Out"
+        >
+          −
+        </button>
+        <button
+          onClick={handleResetZoom}
+          className="px-2 h-7 flex items-center justify-center rounded-xl hover:bg-amber-100 text-[var(--ink)] font-bold text-xs transition"
+          title="Reset Zoom"
+        >
+          {Math.round(zoom * 100)}%
+        </button>
+        <button
+          onClick={handleZoomIn}
+          className="w-7 h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-sm border border-[var(--outline)] transition active:scale-95"
+          title="Zoom In"
+        >
+          +
+        </button>
+      </div>
+
+      {/* Scrollable & Pannable Map Area */}
       <div
-        className="grid p-4 rounded-3xl bg-[var(--board-frame)] border-4 border-[var(--outline)] shadow-2xl transition-all"
-        style={{
-          gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
-        }}
+        className="w-full h-full overflow-auto flex items-center justify-center p-6 scrollbar-thin"
+        onMouseLeave={() => setHoverCoordinate(null)}
       >
-        {renderCells}
+        <div
+          className="transition-transform duration-150 ease-out m-auto"
+          style={{
+            transform: `scale(${zoom})`,
+            transformOrigin: "center center",
+          }}
+        >
+          <div
+            className="grid p-4 rounded-3xl bg-[var(--board-frame)] border-4 border-[var(--outline)] shadow-2xl transition-all"
+            style={{
+              gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
+            }}
+          >
+            {renderCells}
+          </div>
+        </div>
       </div>
     </div>
   );

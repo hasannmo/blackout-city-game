@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import level1Data from "../data/campaign/level-01.json";
+import level2Data from "../data/campaign/level-02.json";
+import level3Data from "../data/campaign/level-03.json";
+import level4Data from "../data/campaign/level-04.json";
+import level5Data from "../data/campaign/level-05.json";
 import buildingDefinitionsData from "../data/buildings.json";
 import type {
   Coordinate,
@@ -27,6 +31,14 @@ import { runSimulation } from "../engine/simulation/runSimulation";
 
 export type AppScreen = "home" | "level-select" | "game";
 
+export const campaignLevels: LevelDefinition[] = [
+  level1Data as unknown as LevelDefinition,
+  level2Data as unknown as LevelDefinition,
+  level3Data as unknown as LevelDefinition,
+  level4Data as unknown as LevelDefinition,
+  level5Data as unknown as LevelDefinition,
+];
+
 interface GameStore {
   currentScreen: AppScreen;
   level: LevelDefinition;
@@ -37,10 +49,16 @@ interface GameStore {
   hoverCoordinate: Coordinate | null;
   toastMessage: string | null;
   showStarSidebar: boolean;
+  unlockedLevelIndex: number;
 
   // Screen Actions
   setScreen: (screen: AppScreen) => void;
   toggleStarSidebar: () => void;
+
+  // Level Actions
+  hasNextLevel: () => boolean;
+  nextLevel: () => void;
+  loadLevel: (levelDef: LevelDefinition) => void;
 
   // Game Actions
   selectInventoryType: (typeId: string | null) => void;
@@ -56,7 +74,7 @@ interface GameStore {
   dismissToast: () => void;
 }
 
-const initialLevel = level1Data as unknown as LevelDefinition;
+const initialLevel = campaignLevels[0];
 const initialDefs =
   buildingDefinitionsData as unknown as BuildingDefinitionsMap;
 const initialIndex = buildLevelIndex(initialLevel, initialDefs);
@@ -76,6 +94,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
   hoverCoordinate: null,
   toastMessage: null,
   showStarSidebar: true,
+  unlockedLevelIndex: 0,
 
   setScreen: (screen) => {
     set({ currentScreen: screen });
@@ -83,6 +102,42 @@ export const useGameStore = create<GameStore>((set, get) => ({
 
   toggleStarSidebar: () => {
     set((state) => ({ showStarSidebar: !state.showStarSidebar }));
+  },
+
+  hasNextLevel: () => {
+    const { level } = get();
+    const currentIndex = campaignLevels.findIndex((l) => l.id === level.id);
+    return currentIndex >= 0 && currentIndex < campaignLevels.length - 1;
+  },
+
+  nextLevel: () => {
+    const { level, loadLevel, hasNextLevel } = get();
+    if (!hasNextLevel()) return;
+    const currentIndex = campaignLevels.findIndex((l) => l.id === level.id);
+    const nextLvl = campaignLevels[currentIndex + 1];
+    if (nextLvl) {
+      loadLevel(nextLvl);
+    }
+  },
+
+  loadLevel: (levelDef) => {
+    const { buildingDefinitions } = get();
+    const newIndex = buildLevelIndex(levelDef, buildingDefinitions);
+    const lvlIndex = campaignLevels.findIndex((l) => l.id === levelDef.id);
+    set((state) => ({
+      level: levelDef,
+      levelIndex: newIndex,
+      currentScreen: "game",
+      unlockedLevelIndex: Math.max(state.unlockedLevelIndex, lvlIndex),
+      gameState: {
+        phase: "placement",
+        generators: [],
+        activeBuildingIds: new Set(),
+        result: null,
+      },
+      toastMessage: null,
+      selectedInventoryType: Object.keys(levelDef.inventory)[0] ?? null,
+    }));
   },
 
   selectInventoryType: (typeId) => {
@@ -141,16 +196,22 @@ export const useGameStore = create<GameStore>((set, get) => ({
   },
 
   proceedToSimulation: () => {
-    const { levelIndex, gameState } = get();
+    const { levelIndex, gameState, level } = get();
     const simResult = runSimulation(levelIndex, gameState);
-    set({
+    const currentIdx = campaignLevels.findIndex((l) => l.id === level.id);
+
+    set((state) => ({
       gameState: {
         ...gameState,
         phase: "simulation",
         result: simResult,
       },
+      unlockedLevelIndex:
+        simResult.completed && currentIdx >= 0
+          ? Math.max(state.unlockedLevelIndex, currentIdx + 1)
+          : state.unlockedLevelIndex,
       toastMessage: null,
-    });
+    }));
   },
 
   toggleBuildingActivation: (buildingId) => {

@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 export const TreeSprite: React.FC = () => {
   return (
@@ -10,6 +10,5 @@ export const TreeSprite: React.FC = () => {
       {/* Trunk */}
       <div className="w-2 h-2.5 bg-amber-900 border-x border-b border-[var(--outline)] rounded-b-sm -mt-0.5" />
     </div>
-  )
-}
-
+  );
+};

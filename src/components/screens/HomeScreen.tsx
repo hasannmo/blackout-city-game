@@ -1,8 +1,8 @@
-import React from 'react'
-import { useGameStore } from '../../stores/gameStore'
+import React from "react";
+import { useGameStore } from "../../stores/gameStore";
 
 export const HomeScreen: React.FC = () => {
-  const setScreen = useGameStore((s) => s.setScreen)
+  const setScreen = useGameStore((s) => s.setScreen);
 
   return (
     <div className="h-screen w-screen flex flex-col items-center justify-between py-10 px-6 select-none bg-[var(--sky)] relative overflow-hidden">
@@ -27,10 +27,14 @@ export const HomeScreen: React.FC = () => {
       {/* Main Play Action Button */}
       <div className="flex flex-col items-center gap-4 z-10 mb-8">
         <button
-          onClick={() => setScreen('level-select')}
+          onClick={() => setScreen("level-select")}
           className="flex items-center justify-center gap-3 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-1 transition text-white px-14 py-5 rounded-3xl font-black text-2xl border-4 border-[var(--outline)] shadow-[0_8px_0_var(--btn-green-rim)] min-w-[280px]"
         >
-          <img src="/icons/zap.svg" alt="Play" className="w-8 h-8 text-amber-300 drop-shadow" />
+          <img
+            src="/icons/zap.svg"
+            alt="Play"
+            className="w-8 h-8 text-amber-300 drop-shadow"
+          />
           <span>PLAY GAME</span>
         </button>
       </div>
@@ -40,5 +44,5 @@ export const HomeScreen: React.FC = () => {
         Blackout City — City Electricity Simulation Puzzle
       </footer>
     </div>
-  )
-}
+  );
+};

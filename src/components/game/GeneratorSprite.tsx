@@ -1,4 +1,4 @@
-import React from 'react'
+import React from "react";
 
 export const GeneratorSprite: React.FC = () => {
   return (
@@ -7,9 +7,12 @@ export const GeneratorSprite: React.FC = () => {
         {/* Top ventilation / detail */}
         <div className="absolute top-1 w-6 h-1 bg-[var(--outline)]/20 rounded-full" />
         {/* Zap Icon */}
-        <img src="/icons/zap.svg" alt="Generator" className="w-6 h-6 mt-1 drop-shadow-sm" />
+        <img
+          src="/icons/zap.svg"
+          alt="Generator"
+          className="w-6 h-6 mt-1 drop-shadow-sm"
+        />
       </div>
     </div>
-  )
-}
-
+  );
+};

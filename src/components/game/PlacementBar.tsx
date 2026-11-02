@@ -1,19 +1,19 @@
-import React from 'react'
-import { useGameStore } from '../../stores/gameStore'
+import React from "react";
+import { useGameStore } from "../../stores/gameStore";
 
 export const PlacementBar: React.FC = () => {
-  const level = useGameStore((s) => s.level)
-  const levelIndex = useGameStore((s) => s.levelIndex)
-  const gameState = useGameStore((s) => s.gameState)
-  const selectedType = useGameStore((s) => s.selectedInventoryType)
-  const selectType = useGameStore((s) => s.selectInventoryType)
-  const proceedToActivation = useGameStore((s) => s.proceedToActivation)
-  const proceedToSimulation = useGameStore((s) => s.proceedToSimulation)
-  const navigateBack = useGameStore((s) => s.navigateBack)
+  const level = useGameStore((s) => s.level);
+  const levelIndex = useGameStore((s) => s.levelIndex);
+  const gameState = useGameStore((s) => s.gameState);
+  const selectedType = useGameStore((s) => s.selectedInventoryType);
+  const selectType = useGameStore((s) => s.selectInventoryType);
+  const proceedToActivation = useGameStore((s) => s.proceedToActivation);
+  const proceedToSimulation = useGameStore((s) => s.proceedToSimulation);
+  const navigateBack = useGameStore((s) => s.navigateBack);
 
-  const isPlacement = gameState.phase === 'placement'
-  const isActivation = gameState.phase === 'activation'
-  const isSimulation = gameState.phase === 'simulation'
+  const isPlacement = gameState.phase === "placement";
+  const isActivation = gameState.phase === "activation";
+  const isSimulation = gameState.phase === "simulation";
 
   return (
     <footer className="w-full flex items-center justify-between px-10 py-4 bg-[var(--panel)] border-t-4 border-[var(--outline)] select-none">
@@ -35,10 +35,12 @@ export const PlacementBar: React.FC = () => {
         {isPlacement && (
           <>
             {Object.entries(level.inventory).map(([typeId, totalCount]) => {
-              const def = levelIndex.buildingDefinitions[typeId]
-              const placed = gameState.generators.filter((g) => g.typeId === typeId).length
-              const remaining = totalCount - placed
-              const isSelected = selectedType === typeId
+              const def = levelIndex.buildingDefinitions[typeId];
+              const placed = gameState.generators.filter(
+                (g) => g.typeId === typeId,
+              ).length;
+              const remaining = totalCount - placed;
+              const isSelected = selectedType === typeId;
 
               return (
                 <button
@@ -46,12 +48,16 @@ export const PlacementBar: React.FC = () => {
                   onClick={() => selectType(typeId)}
                   className={`flex items-center gap-3.5 px-5 py-2.5 rounded-2xl border-2 border-[var(--outline)] transition transform active:scale-95 ${
                     isSelected
-                      ? 'bg-[var(--power-yellow)] shadow-[0_4px_0_var(--outline)] -translate-y-1'
-                      : 'bg-white hover:bg-amber-50'
+                      ? "bg-[var(--power-yellow)] shadow-[0_4px_0_var(--outline)] -translate-y-1"
+                      : "bg-white hover:bg-amber-50"
                   }`}
                 >
                   <div className="w-11 h-11 rounded-xl bg-amber-200 border-2 border-[var(--outline)] flex items-center justify-center">
-                    <img src="/icons/zap.svg" alt="Generator" className="w-7 h-7 text-[var(--ink)]" />
+                    <img
+                      src="/icons/zap.svg"
+                      alt="Generator"
+                      className="w-7 h-7 text-[var(--ink)]"
+                    />
                   </div>
                   <div className="text-left">
                     <span className="block text-xs font-black text-[var(--ink)]">
@@ -59,14 +65,18 @@ export const PlacementBar: React.FC = () => {
                     </span>
                     <span className="flex items-center gap-1 text-[11px] font-bold text-gray-700">
                       Output: <strong>{def?.output}</strong>
-                      <img src="/icons/zap.svg" alt="zap" className="w-3.5 h-3.5 inline" />
+                      <img
+                        src="/icons/zap.svg"
+                        alt="zap"
+                        className="w-3.5 h-3.5 inline"
+                      />
                     </span>
                     <span className="block text-[10px] font-extrabold text-amber-900">
                       Available: {remaining} / {totalCount}
                     </span>
                   </div>
                 </button>
-              )
+              );
             })}
           </>
         )}
@@ -114,5 +124,5 @@ export const PlacementBar: React.FC = () => {
         )}
       </div>
     </footer>
-  )
-}
+  );
+};

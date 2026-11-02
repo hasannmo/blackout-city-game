@@ -6,6 +6,7 @@ export const ResultModal: React.FC = () => {
   const navigateBack = useGameStore((s) => s.navigateBack);
   const nextLevel = useGameStore((s) => s.nextLevel);
   const hasNextLevel = useGameStore((s) => s.hasNextLevel);
+  const setScreen = useGameStore((s) => s.setScreen);
 
   if (gameState.phase !== "simulation" || !gameState.result) return null;
 
@@ -56,11 +57,20 @@ export const ResultModal: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-4 w-full">
+        <div className="flex items-center gap-3 w-full">
+          {/* Level Selector Button */}
+          <button
+            onClick={() => setScreen("level-select")}
+            className="flex-1 bg-amber-100 hover:bg-amber-200 active:translate-y-0.5 border-2 border-[var(--outline)] text-[var(--ink)] py-3 rounded-2xl font-black text-xs sm:text-sm shadow-sm transition"
+            title="Back to Level Selector"
+          >
+            LEVEL
+          </button>
+
           {/* Adjust Button */}
           <button
             onClick={navigateBack}
-            className="flex-1 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white py-3 rounded-2xl font-black shadow-[0_4px_0_var(--btn-blue-rim)]"
+            className="flex-1 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white py-3 rounded-2xl font-black text-xs sm:text-sm shadow-[0_4px_0_var(--btn-blue-rim)] transition"
           >
             ADJUST
           </button>
@@ -73,7 +83,7 @@ export const ResultModal: React.FC = () => {
               }
             }}
             disabled={!canProceedToNext}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-black border-2 border-[var(--outline)] transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-black text-xs sm:text-sm border-2 border-[var(--outline)] transition-all ${
               canProceedToNext
                 ? "bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 text-white shadow-[0_4px_0_var(--btn-green-rim)] cursor-pointer"
                 : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed opacity-60 shadow-none"
@@ -86,11 +96,11 @@ export const ResultModal: React.FC = () => {
                   : "Proceed to Next Level"
             }
           >
-            <span>NEXT LEVEL</span>
+            <span>NEXT</span>
             <img
               src="/icons/arrow-right.svg"
               alt="Next"
-              className={`w-4 h-4 ${canProceedToNext ? "text-white" : "text-gray-400 opacity-60"}`}
+              className={`w-3.5 h-3.5 ${canProceedToNext ? "text-white" : "text-gray-400 opacity-60"}`}
             />
           </button>
         </div>

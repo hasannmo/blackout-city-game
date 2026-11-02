@@ -4,7 +4,6 @@ import { useGameStore, campaignLevels } from "../../stores/gameStore";
 export const LevelSelectorScreen: React.FC = () => {
   const setScreen = useGameStore((s) => s.setScreen);
   const loadLevel = useGameStore((s) => s.loadLevel);
-  const unlockedLevelIndex = useGameStore((s) => s.unlockedLevelIndex);
 
   const levelTitles: Record<string, string> = {
     "level-01": "First Spark",
@@ -37,22 +36,15 @@ export const LevelSelectorScreen: React.FC = () => {
       <div className="flex-1 flex items-center justify-center p-6">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-5 max-w-5xl w-full">
           {campaignLevels.map((lvl, index) => {
-            const isUnlocked = index <= unlockedLevelIndex;
             const title = levelTitles[lvl.id] ?? `Level ${index + 1}`;
 
             return (
               <div
                 key={lvl.id}
                 onClick={() => {
-                  if (isUnlocked) {
-                    loadLevel(lvl);
-                  }
+                  loadLevel(lvl);
                 }}
-                className={`flex flex-col items-center justify-between p-5 rounded-3xl border-4 border-[var(--outline)] transition-all ${
-                  isUnlocked
-                    ? "bg-[var(--panel)] hover:-translate-y-1.5 cursor-pointer shadow-[0_6px_0_var(--outline)]"
-                    : "bg-white/40 opacity-60 cursor-not-allowed shadow-none"
-                }`}
+                className="flex flex-col items-center justify-between p-5 rounded-3xl border-4 border-[var(--outline)] bg-[var(--panel)] hover:-translate-y-1.5 cursor-pointer shadow-[0_6px_0_var(--outline)] transition-all"
               >
                 {/* Level Number Pill */}
                 <span className="text-xs font-black px-3 py-1 bg-amber-200 text-amber-900 border border-[var(--outline)] rounded-full mb-2">
@@ -61,22 +53,16 @@ export const LevelSelectorScreen: React.FC = () => {
 
                 {/* Level Thumbnail / Frame */}
                 <div className="w-24 h-24 rounded-2xl bg-[var(--grass-light)] border-2 border-[var(--outline)] flex flex-col items-center justify-center shadow-inner my-2 relative">
-                  {isUnlocked ? (
-                    <div className="flex flex-col items-center justify-center">
-                      <img
-                        src="/icons/zap.svg"
-                        alt="Power"
-                        className="w-9 h-9 drop-shadow"
-                      />
-                      <span className="text-[10px] font-black text-[var(--ink)] mt-1">
-                        {lvl.grid.width}x{lvl.grid.height} Grid
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-2xl font-black text-gray-400">
-                      🔒
+                  <div className="flex flex-col items-center justify-center">
+                    <img
+                      src="/icons/zap.svg"
+                      alt="Power"
+                      className="w-9 h-9 drop-shadow"
+                    />
+                    <span className="text-[10px] font-black text-[var(--ink)] mt-1">
+                      {lvl.grid.width}x{lvl.grid.height} Grid
                     </span>
-                  )}
+                  </div>
                 </div>
 
                 {/* Level Title */}
@@ -91,9 +77,7 @@ export const LevelSelectorScreen: React.FC = () => {
                       key={starIdx}
                       src="/icons/star.svg"
                       alt="Star"
-                      className={`w-3.5 h-3.5 ${
-                        isUnlocked ? "text-amber-500" : "text-gray-300 opacity-60"
-                      }`}
+                      className="w-3.5 h-3.5 text-amber-500"
                     />
                   ))}
                 </div>

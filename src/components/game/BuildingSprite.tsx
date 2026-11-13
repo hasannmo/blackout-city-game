@@ -41,7 +41,7 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
 
         {/* Hover Score Visibility Pill */}
         {showScoreBadge && (
-          <div className="absolute top-2 right-2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white border-2 border-[var(--outline)] font-black text-xs shadow-md animate-fade-in">
+          <div className="absolute top-2 right-2 z-50 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600 text-white border-2 border-white font-black text-xs shadow-xl animate-fade-in pointer-events-none">
             <span>+{score} PTS</span>
           </div>
         )}
@@ -115,7 +115,7 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
 
       {/* Hover Score Visibility Pill */}
       {showScoreBadge && (
-        <div className="absolute -top-2 right-0.5 z-30 flex items-center px-1.5 py-0.5 rounded-full bg-emerald-500 text-white border border-[var(--outline)] font-black text-[9px] shadow-md animate-fade-in whitespace-nowrap">
+        <div className="absolute -top-3 right-0 z-50 flex items-center px-2 py-0.5 rounded-full bg-emerald-600 text-white border-2 border-white font-black text-[10px] shadow-xl animate-fade-in whitespace-nowrap pointer-events-none">
           <span>+{score} PTS</span>
         </div>
       )}

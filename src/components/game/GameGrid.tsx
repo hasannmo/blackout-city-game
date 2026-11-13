@@ -156,7 +156,7 @@ export const GameGrid: React.FC = () => {
           {/* Placed Building */}
           {buildingInfo && buildingInfo.isOrigin && (
             <div
-              className="absolute top-0 left-0 flex items-center justify-center z-20 pointer-events-none"
+              className="absolute top-0 left-0 flex items-center justify-center z-50 pointer-events-none"
               style={{
                 width: `${buildingInfo.width * 100}%`,
                 height: `${buildingInfo.height * 100}%`,

@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
+import { SolverModal } from "./SolverModal";
 
 export const PlacementBar: React.FC = () => {
   const level = useGameStore((s) => s.level);
@@ -11,24 +12,38 @@ export const PlacementBar: React.FC = () => {
   const proceedToSimulation = useGameStore((s) => s.proceedToSimulation);
   const navigateBack = useGameStore((s) => s.navigateBack);
 
+  const [isSolverOpen, setIsSolverOpen] = useState<boolean>(false);
+
   const isPlacement = gameState.phase === "placement";
   const isActivation = gameState.phase === "activation";
   const isSimulation = gameState.phase === "simulation";
 
   return (
-    <footer className="w-full flex items-center justify-between px-10 py-4 bg-[var(--panel)] border-t-4 border-[var(--outline)] select-none">
-      {/* Back button */}
-      <div>
-        {!isPlacement && (
-          <button
-            onClick={navigateBack}
-            className="flex items-center gap-2 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-5 py-2.5 rounded-2xl font-black shadow-[0_4px_0_var(--btn-blue-rim)]"
-          >
-            <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
-            <span>BACK</span>
-          </button>
-        )}
-      </div>
+    <>
+      <footer className="w-full flex items-center justify-between px-10 py-4 bg-[var(--panel)] border-t-4 border-[var(--outline)] select-none">
+        {/* Left Actions: Back or Solver */}
+        <div className="flex items-center gap-3">
+          {!isPlacement && (
+            <button
+              onClick={navigateBack}
+              className="flex items-center gap-2 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-5 py-2.5 rounded-2xl font-black shadow-[0_4px_0_var(--btn-blue-rim)]"
+            >
+              <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
+              <span>BACK</span>
+            </button>
+          )}
+
+          {isPlacement && (
+            <button
+              onClick={() => setIsSolverOpen(true)}
+              className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 active:translate-y-0.5 border-2 border-[var(--outline)] text-[var(--ink)] px-4 py-2.5 rounded-2xl font-black shadow-sm transition"
+              title="Open Constraint Satisfaction Problem Solver & Benchmark"
+            >
+              <img src="/icons/solver.svg" alt="CSP Solver" className="w-5 h-5" />
+              <span className="text-xs uppercase tracking-wide">CSP Solver</span>
+            </button>
+          )}
+        </div>
 
       {/* Center: Generator Inventory in zap currency */}
       <div className="flex items-center gap-4">
@@ -123,6 +138,13 @@ export const PlacementBar: React.FC = () => {
           </button>
         )}
       </div>
-    </footer>
+      </footer>
+
+      {/* CSP Solver Modal */}
+      <SolverModal
+        isOpen={isSolverOpen}
+        onClose={() => setIsSolverOpen(false)}
+      />
+    </>
   );
 };

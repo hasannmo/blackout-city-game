@@ -81,7 +81,7 @@
   },
   "objective": {
     "type": "minTotalPowered",
-    "min": 5
+    "min": 4
   },
-  "stars": { "two": 90, "three": 130 }
+  "stars": { "two": 70, "three": 100 }
 }

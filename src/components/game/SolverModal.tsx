@@ -106,7 +106,7 @@ export const SolverModal: React.FC<SolverModalProps> = ({ isOpen, onClose }) => 
           {/* Benchmark Comparison Toggle */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-black text-gray-700 uppercase">
-              Academic Benchmark
+              Algorithm Benchmark
             </label>
             <button
               onClick={() => setRunComparison(!runComparison)}
@@ -184,11 +184,11 @@ export const SolverModal: React.FC<SolverModalProps> = ({ isOpen, onClose }) => 
         {/* Benchmark Results Display */}
         {result && (
           <div className="flex flex-col gap-4 bg-white/90 p-4 rounded-2xl border-2 border-[var(--outline)] shadow-inner">
-            {/* Academic Comparison Table if Benchmark active */}
+            {/* Comparison Table if Benchmark active */}
             {result.comparison && (
               <div>
                 <h3 className="text-xs font-black uppercase text-gray-600 mb-2">
-                  Academic Benchmark Comparison:
+                  Algorithm Benchmark Comparison:
                 </h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs text-left border-collapse">

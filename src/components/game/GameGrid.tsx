@@ -77,6 +77,7 @@ export const GameGrid: React.FC = () => {
       variant: string;
       isOrigin: boolean;
       demand: number;
+      score: number;
       width: number;
       height: number;
     }
@@ -91,6 +92,7 @@ export const GameGrid: React.FC = () => {
         variant: b.variant,
         isOrigin: c.x === b.origin.x && c.y === b.origin.y,
         demand: def.demand,
+        score: b.score,
         width: def.width,
         height: def.height,
       });
@@ -165,6 +167,8 @@ export const GameGrid: React.FC = () => {
                 isLit={gameState.activeBuildingIds.has(buildingInfo.id)}
                 isPowered={gameState.activeBuildingIds.has(buildingInfo.id)}
                 demand={buildingInfo.demand}
+                score={buildingInfo.score}
+                isHovered={hoverCoord !== null && buildingCellsMap.get(`${hoverCoord.x},${hoverCoord.y}`)?.id === buildingInfo.id}
               />
               {/* Status Indicator Bubble during Activation / Simulation */}
               {gameState.phase !== "placement" && (

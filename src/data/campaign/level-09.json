@@ -83,5 +83,5 @@
     "type": "minTotalPowered",
     "min": 4
   },
-  "stars": { "two": 70, "three": 100 }
+  "stars": { "two": 60, "three": 80 }
 }

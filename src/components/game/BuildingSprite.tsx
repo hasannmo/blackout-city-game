@@ -5,13 +5,19 @@ interface BuildingProps {
   isLit: boolean;
   isPowered: boolean;
   demand?: number;
+  score?: number;
+  isHovered?: boolean;
 }
 
 export const BuildingSprite: React.FC<BuildingProps> = ({
   variant,
   isLit,
   demand,
+  score,
+  isHovered,
 }) => {
+  const showScoreBadge = isHovered && score !== undefined;
+
   if (variant === "hospital") {
     return (
       <div className="relative w-full h-full flex flex-col items-center justify-center p-2 select-none pointer-events-none">
@@ -30,6 +36,13 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
               alt="demand"
               className="w-3.5 h-3.5 inline"
             />
+          </div>
+        )}
+
+        {/* Hover Score Visibility Pill */}
+        {showScoreBadge && (
+          <div className="absolute top-2 right-2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500 text-white border-2 border-[var(--outline)] font-black text-xs shadow-md animate-fade-in">
+            <span>+{score} PTS</span>
           </div>
         )}
 
@@ -97,6 +110,13 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
         >
           <span className="text-[10px] leading-none">{demand}</span>
           <img src="/icons/zap.svg" alt="demand" className="w-2.5 h-2.5 inline" />
+        </div>
+      )}
+
+      {/* Hover Score Visibility Pill */}
+      {showScoreBadge && (
+        <div className="absolute -top-2 right-0.5 z-30 flex items-center px-1.5 py-0.5 rounded-full bg-emerald-500 text-white border border-[var(--outline)] font-black text-[9px] shadow-md animate-fade-in whitespace-nowrap">
+          <span>+{score} PTS</span>
         </div>
       )}
 

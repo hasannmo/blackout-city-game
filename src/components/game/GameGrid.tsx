@@ -134,7 +134,15 @@ export const GameGrid: React.FC = () => {
             }
           }}
           className={`relative ${cellSizeClass} border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
-            isGhost ? "z-40" : buildingInfo ? (buildingInfo.isOrigin ? "z-30" : "z-10") : ""
+            hoverCoord !== null && hoverCoord.x === x && hoverCoord.y === y
+              ? "z-40"
+              : isGhost
+                ? "z-30"
+                : buildingInfo
+                  ? buildingInfo.isOrigin
+                    ? "z-20"
+                    : "z-10"
+                  : ""
           }`}
           style={{
             backgroundColor: isRoad ? "var(--asphalt)" : defaultGrassBg,
@@ -156,7 +164,7 @@ export const GameGrid: React.FC = () => {
           {/* Placed Building */}
           {buildingInfo && buildingInfo.isOrigin && (
             <div
-              className="absolute top-0 left-0 flex items-center justify-center z-50 pointer-events-none"
+              className="absolute top-0 left-0 flex items-center justify-center z-20 pointer-events-none"
               style={{
                 width: `${buildingInfo.width * 100}%`,
                 height: `${buildingInfo.height * 100}%`,
@@ -168,7 +176,6 @@ export const GameGrid: React.FC = () => {
                 isPowered={gameState.activeBuildingIds.has(buildingInfo.id)}
                 demand={buildingInfo.demand}
                 score={buildingInfo.score}
-                isHovered={hoverCoord !== null && buildingCellsMap.get(`${hoverCoord.x},${hoverCoord.y}`)?.id === buildingInfo.id}
               />
               {/* Status Indicator Bubble during Activation / Simulation */}
               {gameState.phase !== "placement" && (

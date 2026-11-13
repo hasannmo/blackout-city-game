@@ -6,7 +6,6 @@ interface BuildingProps {
   isPowered: boolean;
   demand?: number;
   score?: number;
-  isHovered?: boolean;
 }
 
 export const BuildingSprite: React.FC<BuildingProps> = ({
@@ -14,37 +13,37 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
   isLit,
   demand,
   score,
-  isHovered,
 }) => {
-  const showScoreBadge = isHovered && score !== undefined;
-
   if (variant === "hospital") {
     return (
       <div className="relative w-full h-full flex flex-col items-center justify-center p-2 select-none pointer-events-none">
-        {/* Power Demand Label Pill */}
-        {demand !== undefined && demand > 0 && (
-          <div
-            className={`absolute top-2 left-2 z-30 flex items-center gap-1 px-2 py-0.5 rounded-full border-2 border-[var(--outline)] shadow-sm transition-all ${
-              isLit
-                ? "bg-[var(--power-yellow)] text-amber-950 font-black scale-105"
-                : "bg-white/95 text-[var(--ink)] font-extrabold"
-            }`}
-          >
-            <span className="text-xs leading-none">{demand}</span>
-            <img
-              src="/icons/zap.svg"
-              alt="demand"
-              className="w-3.5 h-3.5 inline"
-            />
-          </div>
-        )}
+        {/* Pills Container (Energy Demand + Score) */}
+        <div className="absolute top-2 left-2 z-30 flex items-center gap-1.5">
+          {/* Power Demand Pill */}
+          {demand !== undefined && demand > 0 && (
+            <div
+              className={`flex items-center gap-1 px-2 py-0.5 rounded-full border-2 border-[var(--outline)] shadow-sm transition-all ${
+                isLit
+                  ? "bg-[var(--power-yellow)] text-amber-950 font-black scale-105"
+                  : "bg-white/95 text-[var(--ink)] font-extrabold"
+              }`}
+            >
+              <span className="text-xs leading-none">{demand}</span>
+              <img
+                src="/icons/zap.svg"
+                alt="demand"
+                className="w-3.5 h-3.5 inline"
+              />
+            </div>
+          )}
 
-        {/* Hover Score Visibility Pill */}
-        {showScoreBadge && (
-          <div className="absolute top-2 right-2 z-50 flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-600 text-white border-2 border-white font-black text-xs shadow-xl animate-fade-in pointer-events-none">
-            <span>+{score} PTS</span>
-          </div>
-        )}
+          {/* Static Score Pill */}
+          {score !== undefined && (
+            <div className="flex items-center px-2 py-0.5 rounded-full bg-emerald-600 text-white border-2 border-[var(--outline)] font-black text-xs shadow-sm">
+              <span>{score} PTS</span>
+            </div>
+          )}
+        </div>
 
         {/* Hospital Building Body (2x2 footprint) */}
         <div
@@ -99,26 +98,29 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
 
   return (
     <div className="relative w-full h-full flex flex-col items-center justify-center p-1 select-none pointer-events-none">
-      {/* Power Demand Label Pill */}
-      {demand !== undefined && demand > 0 && (
-        <div
-          className={`absolute -top-1.5 left-1 z-30 flex items-center gap-0.5 px-1.5 py-0.5 rounded-full border border-[var(--outline)] shadow-sm transition-all ${
-            isLit
-              ? "bg-[var(--power-yellow)] text-amber-950 font-black scale-105"
-              : "bg-white/95 text-[var(--ink)] font-extrabold"
-          }`}
-        >
-          <span className="text-[10px] leading-none">{demand}</span>
-          <img src="/icons/zap.svg" alt="demand" className="w-2.5 h-2.5 inline" />
-        </div>
-      )}
+      {/* Pills Container (Energy Demand + Score) */}
+      <div className="absolute -top-1.5 left-0.5 z-30 flex items-center gap-1">
+        {/* Power Demand Pill */}
+        {demand !== undefined && demand > 0 && (
+          <div
+            className={`flex items-center gap-0.5 px-1.5 py-0.5 rounded-full border border-[var(--outline)] shadow-sm transition-all ${
+              isLit
+                ? "bg-[var(--power-yellow)] text-amber-950 font-black scale-105"
+                : "bg-white/95 text-[var(--ink)] font-extrabold"
+            }`}
+          >
+            <span className="text-[10px] leading-none">{demand}</span>
+            <img src="/icons/zap.svg" alt="demand" className="w-2.5 h-2.5 inline" />
+          </div>
+        )}
 
-      {/* Hover Score Visibility Pill */}
-      {showScoreBadge && (
-        <div className="absolute -top-3 right-0 z-50 flex items-center px-2 py-0.5 rounded-full bg-emerald-600 text-white border-2 border-white font-black text-[10px] shadow-xl animate-fade-in whitespace-nowrap pointer-events-none">
-          <span>+{score} PTS</span>
-        </div>
-      )}
+        {/* Static Score Pill */}
+        {score !== undefined && (
+          <div className="flex items-center px-1.5 py-0.5 rounded-full bg-emerald-600 text-white border border-[var(--outline)] font-black text-[9px] shadow-sm leading-none">
+            <span>{score}</span>
+          </div>
+        )}
+      </div>
 
       {/* 2.5D Isometric Roof */}
       <div

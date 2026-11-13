@@ -4,6 +4,11 @@ import level2Data from "../data/campaign/level-02.json";
 import level3Data from "../data/campaign/level-03.json";
 import level4Data from "../data/campaign/level-04.json";
 import level5Data from "../data/campaign/level-05.json";
+import level6Data from "../data/campaign/level-06.json";
+import level7Data from "../data/campaign/level-07.json";
+import level8Data from "../data/campaign/level-08.json";
+import level9Data from "../data/campaign/level-09.json";
+import level10Data from "../data/campaign/level-10.json";
 import buildingDefinitionsData from "../data/buildings.json";
 import type {
   Coordinate,
@@ -37,6 +42,11 @@ export const campaignLevels: LevelDefinition[] = [
   level3Data as unknown as LevelDefinition,
   level4Data as unknown as LevelDefinition,
   level5Data as unknown as LevelDefinition,
+  level6Data as unknown as LevelDefinition,
+  level7Data as unknown as LevelDefinition,
+  level8Data as unknown as LevelDefinition,
+  level9Data as unknown as LevelDefinition,
+  level10Data as unknown as LevelDefinition,
 ];
 
 interface GameStore {

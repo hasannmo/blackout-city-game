@@ -1,0 +1,45 @@
+{
+  "id": "level-06",
+  "name": "Level 6",
+  "grid": { "width": 6, "height": 6 },
+  "roads": [
+    { "x": 2, "y": 1 },
+    { "x": 3, "y": 1 },
+    { "x": 3, "y": 2 },
+    { "x": 3, "y": 3 },
+    { "x": 3, "y": 4 },
+    { "x": 2, "y": 4 }
+  ],
+  "terrain": [
+    { "x": 0, "y": 0 },
+    { "x": 5, "y": 5 },
+    { "x": 1, "y": 3 }
+  ],
+  "buildings": [
+    {
+      "id": "hosp1",
+      "variant": "hospital",
+      "origin": { "x": 0, "y": 1 },
+      "score": 30
+    },
+    {
+      "id": "house1",
+      "variant": "house",
+      "origin": { "x": 4, "y": 2 },
+      "score": 10
+    },
+    {
+      "id": "house2",
+      "variant": "house",
+      "origin": { "x": 4, "y": 3 },
+      "score": 10
+    }
+  ],
+  "inventory": {
+    "generator": 2
+  },
+  "objective": {
+    "type": "allBuildingsPowered"
+  },
+  "stars": { "two": 40, "three": 50 }
+}

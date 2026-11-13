@@ -7,6 +7,14 @@
     "demand": 2,
     "output": 0
   },
+  "hospital": {
+    "name": "Hospital",
+    "category": "commercial",
+    "width": 2,
+    "height": 2,
+    "demand": 6,
+    "output": 0
+  },
   "generator": {
     "name": "Generator",
     "category": "generator",

@@ -1,0 +1,99 @@
+{
+  "id": "level-10",
+  "name": "Level 10",
+  "grid": { "width": 8, "height": 8 },
+  "roads": [
+    { "x": 1, "y": 1 },
+    { "x": 2, "y": 1 },
+    { "x": 5, "y": 1 },
+    { "x": 6, "y": 1 },
+    { "x": 3, "y": 3 },
+    { "x": 4, "y": 3 },
+    { "x": 3, "y": 4 },
+    { "x": 4, "y": 4 },
+    { "x": 1, "y": 6 },
+    { "x": 2, "y": 6 },
+    { "x": 5, "y": 6 },
+    { "x": 6, "y": 6 }
+  ],
+  "terrain": [
+    { "x": 0, "y": 0 },
+    { "x": 7, "y": 0 },
+    { "x": 0, "y": 7 },
+    { "x": 7, "y": 7 },
+    { "x": 3, "y": 0 },
+    { "x": 4, "y": 0 },
+    { "x": 3, "y": 7 },
+    { "x": 4, "y": 7 }
+  ],
+  "buildings": [
+    {
+      "id": "hosp1",
+      "variant": "hospital",
+      "origin": { "x": 0, "y": 2 },
+      "score": 30
+    },
+    {
+      "id": "hosp2",
+      "variant": "hospital",
+      "origin": { "x": 6, "y": 2 },
+      "score": 30
+    },
+    {
+      "id": "hosp3",
+      "variant": "hospital",
+      "origin": { "x": 0, "y": 4 },
+      "score": 30
+    },
+    {
+      "id": "hosp4",
+      "variant": "hospital",
+      "origin": { "x": 6, "y": 4 },
+      "score": 30
+    },
+    {
+      "id": "house1",
+      "variant": "house",
+      "origin": { "x": 1, "y": 0 },
+      "score": 10
+    },
+    {
+      "id": "house2",
+      "variant": "house",
+      "origin": { "x": 6, "y": 0 },
+      "score": 10
+    },
+    {
+      "id": "house3",
+      "variant": "house",
+      "origin": { "x": 3, "y": 2 },
+      "score": 10
+    },
+    {
+      "id": "house4",
+      "variant": "house",
+      "origin": { "x": 4, "y": 2 },
+      "score": 10
+    },
+    {
+      "id": "house5",
+      "variant": "house",
+      "origin": { "x": 3, "y": 5 },
+      "score": 10
+    },
+    {
+      "id": "house6",
+      "variant": "house",
+      "origin": { "x": 4, "y": 5 },
+      "score": 10
+    }
+  ],
+  "inventory": {
+    "generator": 5
+  },
+  "objective": {
+    "type": "minTotalPowered",
+    "min": 6
+  },
+  "stars": { "two": 110, "three": 150 }
+}

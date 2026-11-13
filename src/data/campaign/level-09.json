@@ -1,0 +1,87 @@
+{
+  "id": "level-09",
+  "name": "Level 9",
+  "grid": { "width": 8, "height": 8 },
+  "roads": [
+    { "x": 1, "y": 1 },
+    { "x": 2, "y": 1 },
+    { "x": 1, "y": 2 },
+    { "x": 5, "y": 1 },
+    { "x": 6, "y": 1 },
+    { "x": 6, "y": 2 },
+    { "x": 1, "y": 5 },
+    { "x": 1, "y": 6 },
+    { "x": 2, "y": 6 },
+    { "x": 6, "y": 5 },
+    { "x": 5, "y": 6 },
+    { "x": 6, "y": 6 }
+  ],
+  "terrain": [
+    { "x": 3, "y": 0 },
+    { "x": 4, "y": 0 },
+    { "x": 3, "y": 7 },
+    { "x": 4, "y": 7 },
+    { "x": 0, "y": 3 },
+    { "x": 0, "y": 4 },
+    { "x": 7, "y": 3 },
+    { "x": 7, "y": 4 }
+  ],
+  "buildings": [
+    {
+      "id": "hosp1",
+      "variant": "hospital",
+      "origin": { "x": 2, "y": 2 },
+      "score": 30
+    },
+    {
+      "id": "house1",
+      "variant": "house",
+      "origin": { "x": 0, "y": 1 },
+      "score": 10
+    },
+    {
+      "id": "hosp2",
+      "variant": "hospital",
+      "origin": { "x": 4, "y": 1 },
+      "score": 30
+    },
+    {
+      "id": "house2",
+      "variant": "house",
+      "origin": { "x": 7, "y": 1 },
+      "score": 10
+    },
+    {
+      "id": "hosp3",
+      "variant": "hospital",
+      "origin": { "x": 2, "y": 4 },
+      "score": 30
+    },
+    {
+      "id": "house3",
+      "variant": "house",
+      "origin": { "x": 0, "y": 6 },
+      "score": 10
+    },
+    {
+      "id": "hosp4",
+      "variant": "hospital",
+      "origin": { "x": 4, "y": 5 },
+      "score": 30
+    },
+    {
+      "id": "house4",
+      "variant": "house",
+      "origin": { "x": 7, "y": 6 },
+      "score": 10
+    }
+  ],
+  "inventory": {
+    "generator": 4
+  },
+  "objective": {
+    "type": "minTotalPowered",
+    "min": 5
+  },
+  "stars": { "two": 90, "three": 130 }
+}

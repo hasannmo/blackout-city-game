@@ -72,7 +72,14 @@ export const GameGrid: React.FC = () => {
   // Buildings lookup
   const buildingCellsMap = new Map<
     string,
-    { id: string; variant: string; isOrigin: boolean; demand: number }
+    {
+      id: string;
+      variant: string;
+      isOrigin: boolean;
+      demand: number;
+      width: number;
+      height: number;
+    }
   >();
   for (const b of level.buildings) {
     const def = levelIndex.buildingDefinitions[b.variant];
@@ -84,6 +91,8 @@ export const GameGrid: React.FC = () => {
         variant: b.variant,
         isOrigin: c.x === b.origin.x && c.y === b.origin.y,
         demand: def.demand,
+        width: def.width,
+        height: def.height,
       });
     }
   }
@@ -123,7 +132,7 @@ export const GameGrid: React.FC = () => {
             }
           }}
           className={`relative ${cellSizeClass} border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
-            buildingInfo ? "z-20" : ""
+            buildingInfo ? (buildingInfo.isOrigin ? "z-30" : "z-10") : ""
           }`}
           style={{
             backgroundColor: isRoad ? "var(--asphalt)" : defaultGrassBg,
@@ -144,7 +153,13 @@ export const GameGrid: React.FC = () => {
 
           {/* Placed Building */}
           {buildingInfo && buildingInfo.isOrigin && (
-            <div className="relative w-full h-full flex items-center justify-center z-10">
+            <div
+              className="absolute top-0 left-0 flex items-center justify-center z-20 pointer-events-none"
+              style={{
+                width: `${buildingInfo.width * 100}%`,
+                height: `${buildingInfo.height * 100}%`,
+              }}
+            >
               <BuildingSprite
                 variant={buildingInfo.variant}
                 isLit={gameState.activeBuildingIds.has(buildingInfo.id)}
@@ -153,7 +168,7 @@ export const GameGrid: React.FC = () => {
               />
               {/* Status Indicator Bubble during Activation / Simulation */}
               {gameState.phase !== "placement" && (
-                <div className="absolute top-1 right-1 z-30 w-7 h-7 rounded-full bg-white border-2 border-[var(--outline)] flex items-center justify-center shadow-lg">
+                <div className="absolute top-2 right-2 z-30 w-7 h-7 rounded-full bg-white border-2 border-[var(--outline)] flex items-center justify-center shadow-lg">
                   {gameState.activeBuildingIds.has(buildingInfo.id) ? (
                     <img
                       src="/icons/zap.svg"

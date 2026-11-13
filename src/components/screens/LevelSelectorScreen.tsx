@@ -11,6 +11,11 @@ export const LevelSelectorScreen: React.FC = () => {
     "level-03": "Twin Enclaves",
     "level-04": "Triple Cross",
     "level-05": "Grand Metropolis",
+    "level-06": "Medical Center",
+    "level-07": "Regional Care",
+    "level-08": "Metro Clinic",
+    "level-09": "Crossroads Hospital",
+    "level-10": "Mega City Medical",
   };
 
   return (
@@ -33,8 +38,8 @@ export const LevelSelectorScreen: React.FC = () => {
       </header>
 
       {/* Level Selection Cards Grid */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-5 max-w-5xl w-full">
+      <div className="flex-1 flex items-center justify-center p-4 overflow-y-auto min-h-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-5xl w-full m-auto py-2">
           {campaignLevels.map((lvl, index) => {
             const title = levelTitles[lvl.id] ?? `Level ${index + 1}`;
 

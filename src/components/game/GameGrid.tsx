@@ -132,7 +132,7 @@ export const GameGrid: React.FC = () => {
             }
           }}
           className={`relative ${cellSizeClass} border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
-            buildingInfo ? (buildingInfo.isOrigin ? "z-30" : "z-10") : ""
+            isGhost ? "z-40" : buildingInfo ? (buildingInfo.isOrigin ? "z-30" : "z-10") : ""
           }`}
           style={{
             backgroundColor: isRoad ? "var(--asphalt)" : defaultGrassBg,

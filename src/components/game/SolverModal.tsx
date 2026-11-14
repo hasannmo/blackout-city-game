@@ -48,7 +48,7 @@ export const SolverModal: React.FC<SolverModalProps> = ({ isOpen, onClose }) => 
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4 select-none">
-      <div className="bg-[var(--panel)] border-4 border-[var(--outline)] rounded-3xl p-6 max-w-2xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--panel)] border-4 border-[var(--outline)] rounded-3xl p-4 sm:p-6 max-w-2xl w-full shadow-2xl flex flex-col max-h-[92dvh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b-2 border-gray-200 mb-4">
           <div className="flex items-center gap-2.5">
@@ -66,7 +66,7 @@ export const SolverModal: React.FC<SolverModalProps> = ({ isOpen, onClose }) => 
           </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-gray-200 hover:bg-gray-300 font-black text-gray-700 flex items-center justify-center transition"
+            className="w-10 h-10 sm:w-8 sm:h-8 shrink-0 rounded-xl bg-gray-200 hover:bg-gray-300 font-black text-gray-700 flex items-center justify-center transition"
           >
             ✕
           </button>

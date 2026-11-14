@@ -103,7 +103,11 @@ export const useGameStore = create<GameStore>((set, get) => ({
   selectedInventoryType: "generator",
   hoverCoordinate: null,
   toastMessage: null,
-  showStarSidebar: true,
+  // Desktop: goals panel open by default. Mobile: it is a bottom sheet, so start closed.
+  showStarSidebar:
+    typeof window === "undefined" || !window.matchMedia
+      ? true
+      : window.matchMedia("(min-width: 1024px)").matches,
   unlockedLevelIndex: 0,
 
   setScreen: (screen) => {

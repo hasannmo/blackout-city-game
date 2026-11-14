@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import { evaluatePlacement } from "../../engine/placement/evaluatePlacement";
 import { getFootprintCells, cellKey } from "../../engine/grid/footprint";
@@ -20,17 +20,88 @@ export const GameGrid: React.FC = () => {
     (s) => s.toggleBuildingActivation,
   );
 
+  // zoom is a multiplier on top of the automatic "fit to screen" scale
   const [zoom, setZoom] = useState<number>(1);
 
-  const handleZoomIn = () => setZoom((z) => Math.min(1.5, Number((z + 0.1).toFixed(1))));
-  const handleZoomOut = () => setZoom((z) => Math.max(0.6, Number((z - 0.1).toFixed(1))));
+  const handleZoomIn = () => setZoom((z) => Math.min(3, Number((z + 0.25).toFixed(2))));
+  const handleZoomOut = () => setZoom((z) => Math.max(0.5, Number((z - 0.25).toFixed(2))));
   const handleResetZoom = () => setZoom(1);
 
   const width = level.grid.width;
   const height = level.grid.height;
 
-  // Adapt base cell size depending on board dimension so larger grids (e.g. 7x7) fit elegantly
+  // Board is laid out at a fixed "design size" (sprites are drawn for it) and then
+  // scaled as a whole, so the same board fits a phone, a tablet and a desktop.
+  const cellPx = width > 5 ? 80 : 96;
   const cellSizeClass = width > 5 ? "w-20 h-20" : "w-24 h-24";
+  const BOARD_CHROME = 40; // p-4 (2x16) + border-4 (2x4)
+  const boardW = width * cellPx + BOARD_CHROME;
+  const boardH = height * cellPx + BOARD_CHROME;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [box, setBox] = useState<{ w: number; h: number }>({ w: 0, h: 0 });
+  // offsetWidth/Height (not clientWidth) so a scrollbar appearing never feeds back into the scale
+  useLayoutEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setBox({ w: el.offsetWidth, h: el.offsetHeight });
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
+
+  const pad = box.w < 640 ? 8 : 24;
+  const fitScale =
+    box.w > 0 && box.h > 0
+      ? Math.min(1, (box.w - pad * 2) / boardW, (box.h - pad * 2) / boardH)
+      : 1;
+  const scale = Math.max(0.1, fitScale) * zoom;
+
+  // Touch devices have no hover: first tap previews, second tap on the same tile places.
+  const pointerTypeRef = useRef<string>("mouse");
+  const [isCoarse, setIsCoarse] = useState<boolean>(false);
+  useEffect(() => {
+    if (!window.matchMedia) return;
+    const mq = window.matchMedia("(pointer: coarse)");
+    const update = () => setIsCoarse(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
+
+  // New level -> reset zoom. Phase change -> drop any stale touch preview.
+  useEffect(() => {
+    setZoom(1);
+  }, [level.id]);
+  useEffect(() => {
+    setHoverCoordinate(null);
+  }, [gameState.phase, setHoverCoordinate]);
+
+  const handleCellClick = (
+    x: number,
+    y: number,
+    generatorInfo: { instanceId: string } | undefined,
+    buildingId: string | undefined,
+  ) => {
+    if (gameState.phase === "placement") {
+      if (generatorInfo) {
+        removeGenerator(generatorInfo.instanceId);
+        return;
+      }
+      const isTouch = pointerTypeRef.current !== "mouse";
+      const alreadyPreviewed =
+        hoverCoord !== null && hoverCoord.x === x && hoverCoord.y === y;
+      if (isTouch && !alreadyPreviewed) {
+        setHoverCoordinate({ x, y }); // 1st tap: show ghost (valid / invalid)
+        return;
+      }
+      placeGeneratorAt({ x, y }); // mouse click, or 2nd tap on the same tile
+      if (isTouch) setHoverCoordinate(null);
+    } else if (gameState.phase === "activation" && buildingId) {
+      toggleBuildingActivation(buildingId);
+    }
+  };
 
   // Compute ghost placement preview if in placement phase
   let ghostValid: boolean | null = null;
@@ -124,18 +195,14 @@ export const GameGrid: React.FC = () => {
       renderCells.push(
         <div
           key={key}
-          onMouseEnter={() => setHoverCoordinate({ x, y })}
-          onClick={() => {
-            if (gameState.phase === "placement") {
-              if (generatorInfo) {
-                removeGenerator(generatorInfo.instanceId);
-              } else {
-                placeGeneratorAt({ x, y });
-              }
-            } else if (gameState.phase === "activation" && buildingInfo) {
-              toggleBuildingActivation(buildingInfo.id);
-            }
+          onPointerDown={(e) => {
+            pointerTypeRef.current = e.pointerType;
           }}
+          onPointerEnter={(e) => {
+            // hover preview is mouse-only; touch uses tap-to-preview in handleCellClick
+            if (e.pointerType === "mouse") setHoverCoordinate({ x, y });
+          }}
+          onClick={() => handleCellClick(x, y, generatorInfo, buildingInfo?.id)}
           className={`relative ${cellSizeClass} border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
             isCellHovered && isGhost
               ? "z-40"
@@ -234,54 +301,70 @@ export const GameGrid: React.FC = () => {
   }
 
   return (
-    <div className="relative flex-1 min-h-0 w-full h-full flex flex-col items-center justify-center overflow-hidden">
-      {/* Floating Zoom Controls */}
-      <div className="absolute top-2 right-2 z-40 flex items-center gap-1.5 bg-[var(--panel)]/95 backdrop-blur-xs p-1.5 rounded-2xl border-2 border-[var(--outline)] shadow-lg select-none">
+    <div className="relative flex-1 min-h-0 w-full h-full flex flex-col items-center overflow-hidden">
+      {/* Zoom Controls: own row on phones (never covers the board), floating on sm+ */}
+      <div className="self-end mr-2 mb-1 sm:mr-0 sm:mb-0 sm:absolute sm:top-2 sm:right-2 z-40 flex items-center gap-1.5 bg-[var(--panel)]/95 backdrop-blur-xs p-1 sm:p-1.5 rounded-2xl border-2 border-[var(--outline)] shadow-lg select-none">
         <button
           onClick={handleZoomOut}
-          className="w-7 h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-sm border border-[var(--outline)] transition active:scale-95"
+          className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-base sm:text-sm border border-[var(--outline)] transition active:scale-95"
           title="Zoom Out"
         >
           −
         </button>
         <button
           onClick={handleResetZoom}
-          className="px-2 h-7 flex items-center justify-center rounded-xl hover:bg-amber-100 text-[var(--ink)] font-bold text-xs transition"
+          className="px-2 min-w-12 h-10 sm:h-7 flex items-center justify-center rounded-xl hover:bg-amber-100 text-[var(--ink)] font-bold text-xs transition"
           title="Reset Zoom"
         >
           {Math.round(zoom * 100)}%
         </button>
         <button
           onClick={handleZoomIn}
-          className="w-7 h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-sm border border-[var(--outline)] transition active:scale-95"
+          className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-base sm:text-sm border border-[var(--outline)] transition active:scale-95"
           title="Zoom In"
         >
           +
         </button>
       </div>
 
-      {/* Scrollable & Pannable Map Area */}
+      {/* Scrollable & Pannable Map Area (finger-drag pans when zoomed in) */}
       <div
-        className="w-full h-full overflow-auto flex items-center justify-center p-6 scrollbar-thin"
-        onMouseLeave={() => setHoverCoordinate(null)}
+        ref={containerRef}
+        className="flex-1 min-h-0 w-full overflow-auto flex scrollbar-thin"
+        style={{ padding: pad, touchAction: "pan-x pan-y" }}
+        onPointerLeave={(e) => {
+          if (e.pointerType === "mouse") setHoverCoordinate(null);
+        }}
       >
+        {/* Sizer: takes the *scaled* size so scrolling/centering stay correct */}
         <div
-          className="transition-transform duration-150 ease-out m-auto"
-          style={{
-            transform: `scale(${zoom})`,
-            transformOrigin: "center center",
-          }}
+          className="m-auto shrink-0"
+          style={{ width: boardW * scale, height: boardH * scale }}
         >
           <div
-            className="grid p-4 rounded-3xl bg-[var(--board-frame)] border-4 border-[var(--outline)] shadow-2xl transition-all"
+            className="grid p-4 rounded-3xl bg-[var(--board-frame)] border-4 border-[var(--outline)] shadow-2xl"
             style={{
-              gridTemplateColumns: `repeat(${width}, minmax(0, 1fr))`,
+              width: boardW,
+              height: boardH,
+              gridTemplateColumns: `repeat(${width}, ${cellPx}px)`,
+              gridAutoRows: `${cellPx}px`,
+              transform: `scale(${scale})`,
+              transformOrigin: "top left",
             }}
           >
             {renderCells}
           </div>
         </div>
       </div>
+
+      {/* Touch hint (phones/tablets only) */}
+      {isCoarse && gameState.phase === "placement" && selectedType && (
+        <div className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 z-30 max-w-[92%] rounded-full bg-[var(--ink)]/85 px-3 py-1 text-[11px] font-bold text-white text-center">
+          {hoverCoord
+            ? "Tap again to place · tap another tile to move"
+            : "Tap a tile to preview · tap a generator to remove"}
+        </div>
+      )}
     </div>
   );
 };

@@ -18,12 +18,12 @@ export const GameHUD: React.FC = () => {
   const activationReport = computeActivationReport(levelIndex, gameState);
 
   return (
-    <header className="w-full flex items-center justify-between px-6 py-3 select-none">
+    <header className="w-full flex flex-wrap items-center justify-between gap-2 px-3 py-2 sm:px-6 sm:py-3 select-none">
       {/* Left: Level Info & Level Select Navigation */}
-      <div className="flex items-center gap-4 bg-[var(--panel)] px-4 py-2 rounded-2xl border-2 border-[var(--outline)] shadow-md">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0 bg-[var(--panel)] px-2 sm:px-4 py-1.5 sm:py-2 rounded-2xl border-2 border-[var(--outline)] shadow-md">
         <button
           onClick={() => setScreen("level-select")}
-          className="p-1.5 hover:bg-amber-100 rounded-xl transition"
+          className="w-10 h-10 shrink-0 flex items-center justify-center hover:bg-amber-100 rounded-xl transition"
           title="Back to Level Selector"
         >
           <img
@@ -32,24 +32,24 @@ export const GameHUD: React.FC = () => {
             className="w-5 h-5 text-[var(--ink)]"
           />
         </button>
-        <div>
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block">
+        <div className="min-w-0">
+          <span className="hidden sm:block text-xs font-bold text-gray-500 uppercase tracking-wider">
             Campaign
           </span>
-          <h1 className="text-lg font-black leading-none text-[var(--ink)]">
+          <h1 className="text-base sm:text-lg font-black leading-none text-[var(--ink)] truncate">
             {level.name}
           </h1>
         </div>
-        <div className="h-6 w-px bg-gray-300 mx-1" />
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full">
-            Phase: <strong className="uppercase">{gameState.phase}</strong>
+        <div className="hidden sm:block h-6 w-px bg-gray-300 mx-1" />
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[11px] sm:text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 px-2 py-0.5 rounded-full">
+            <span className="hidden sm:inline">Phase: </span><strong className="uppercase">{gameState.phase}</strong>
           </span>
         </div>
       </div>
 
       {/* Center: Network Capacities in In-Game Zap Currency */}
-      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center max-w-xl">
+      <div className="order-3 w-full lg:order-none lg:w-auto flex items-center gap-1.5 sm:gap-2 flex-wrap justify-center max-w-xl">
         {levelIndex.roadComponents.map((comp) => {
           const cap = capacityReport.get(comp.id);
           const act = activationReport.get(comp.id);
@@ -111,11 +111,11 @@ export const GameHUD: React.FC = () => {
       </div>
 
       {/* Right: Sidebar Toggle & Reset */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
         {/* Toggle Star Requirements Sidebar Button */}
         <button
           onClick={toggleStarSidebar}
-          className={`flex items-center gap-1.5 border-2 border-[var(--outline)] px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm active:translate-y-0.5 ${
+          className={`flex items-center justify-center gap-1.5 border-2 border-[var(--outline)] min-w-10 h-10 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition shadow-sm active:translate-y-0.5 ${
             showStarSidebar
               ? "bg-[var(--power-yellow)] text-amber-950"
               : "bg-[var(--panel)] hover:bg-amber-100 text-[var(--ink)]"
@@ -123,16 +123,16 @@ export const GameHUD: React.FC = () => {
           title={showStarSidebar ? "Hide Objectives & Stars" : "Show Objectives & Stars"}
         >
           <img src="/icons/star.svg" alt="Stars" className="w-4 h-4" />
-          <span>{showStarSidebar ? "Hide Goals" : "Goals"}</span>
+          <span className="hidden sm:inline">{showStarSidebar ? "Hide Goals" : "Goals"}</span>
         </button>
 
         <button
           onClick={resetCurrentLevel}
-          className="flex items-center gap-1.5 bg-[var(--panel)] hover:bg-amber-100 text-[var(--ink)] border-2 border-[var(--outline)] px-3 py-2 rounded-xl text-xs font-bold transition shadow-sm active:translate-y-0.5"
+          className="flex items-center justify-center gap-1.5 bg-[var(--panel)] hover:bg-amber-100 text-[var(--ink)] border-2 border-[var(--outline)] min-w-10 h-10 px-2.5 sm:px-3 rounded-xl text-xs font-bold transition shadow-sm active:translate-y-0.5"
           title="Reset Level"
         >
           <img src="/icons/reset.svg" alt="Reset" className="w-4 h-4" />
-          <span>Reset</span>
+          <span className="hidden sm:inline">Reset</span>
         </button>
       </div>
     </header>

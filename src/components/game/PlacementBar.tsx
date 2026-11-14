@@ -20,13 +20,13 @@ export const PlacementBar: React.FC = () => {
 
   return (
     <>
-      <footer className="w-full flex items-center justify-between px-10 py-4 bg-[var(--panel)] border-t-4 border-[var(--outline)] select-none">
+      <footer className="w-full grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-between sm:gap-x-3 sm:gap-y-2 px-3 sm:px-6 lg:px-10 pt-2 sm:pt-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] sm:pb-[max(1rem,env(safe-area-inset-bottom))] bg-[var(--panel)] border-t-4 border-[var(--outline)] select-none">
         {/* Left Actions: Back or Solver */}
         <div className="flex items-center gap-3">
           {!isPlacement && (
             <button
               onClick={navigateBack}
-              className="flex items-center gap-2 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-5 py-2.5 rounded-2xl font-black shadow-[0_4px_0_var(--btn-blue-rim)]"
+              className="w-full sm:w-auto justify-center flex items-center gap-2 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-4 sm:px-5 py-2.5 min-h-12 sm:min-h-11 rounded-2xl font-black shadow-[0_4px_0_var(--btn-blue-rim)]"
             >
               <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
               <span>BACK</span>
@@ -36,7 +36,7 @@ export const PlacementBar: React.FC = () => {
           {isPlacement && (
             <button
               onClick={() => setIsSolverOpen(true)}
-              className="flex items-center gap-2 bg-amber-400 hover:bg-amber-300 active:translate-y-0.5 border-2 border-[var(--outline)] text-[var(--ink)] px-4 py-2.5 rounded-2xl font-black shadow-sm transition"
+              className="w-full sm:w-auto justify-center flex items-center gap-2 bg-amber-400 hover:bg-amber-300 active:translate-y-0.5 border-2 border-[var(--outline)] text-[var(--ink)] px-3 sm:px-4 py-2.5 min-h-12 sm:min-h-11 rounded-2xl font-black shadow-sm transition"
               title="Open Constraint Satisfaction Problem Solver & Benchmark"
             >
               <img src="/icons/solver.svg" alt="CSP Solver" className="w-5 h-5" />
@@ -46,7 +46,7 @@ export const PlacementBar: React.FC = () => {
         </div>
 
       {/* Center: Generator Inventory in zap currency */}
-      <div className="flex items-center gap-4">
+      <div className="col-span-2 order-first w-full lg:order-none lg:w-auto flex items-center justify-center gap-2 sm:gap-4 max-lg:overflow-x-auto py-2 lg:py-0">
         {isPlacement && (
           <>
             {Object.entries(level.inventory).map(([typeId, totalCount]) => {
@@ -61,13 +61,13 @@ export const PlacementBar: React.FC = () => {
                 <button
                   key={typeId}
                   onClick={() => selectType(typeId)}
-                  className={`flex items-center gap-3.5 px-5 py-2.5 rounded-2xl border-2 border-[var(--outline)] transition transform active:scale-95 ${
+                  className={`flex-1 min-w-[9.5rem] sm:flex-none justify-center sm:justify-start shrink-0 flex items-center gap-2 sm:gap-3.5 px-3 sm:px-5 py-2 sm:py-2.5 rounded-2xl border-2 border-[var(--outline)] transition transform active:scale-95 ${
                     isSelected
                       ? "bg-[var(--power-yellow)] shadow-[0_4px_0_var(--outline)] -translate-y-1"
                       : "bg-white hover:bg-amber-50"
                   }`}
                 >
-                  <div className="w-11 h-11 rounded-xl bg-amber-200 border-2 border-[var(--outline)] flex items-center justify-center">
+                  <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-amber-200 border-2 border-[var(--outline)] flex items-center justify-center">
                     <img
                       src="/icons/zap.svg"
                       alt="Generator"
@@ -97,18 +97,18 @@ export const PlacementBar: React.FC = () => {
         )}
 
         {isActivation && (
-          <div className="text-center">
+          <div className="text-center w-full">
             <span className="text-sm font-black text-[var(--ink)] block">
               Tap connected house to activate electricity
             </span>
-            <span className="text-xs text-gray-600">
+            <span className="hidden sm:inline text-xs text-gray-600">
               Auto-activation has allocated generation to connected demand.
             </span>
           </div>
         )}
 
         {isSimulation && (
-          <div className="text-center">
+          <div className="text-center w-full">
             <span className="text-sm font-black text-amber-900 block">
               Simulation evaluation complete!
             </span>
@@ -121,7 +121,7 @@ export const PlacementBar: React.FC = () => {
         {isPlacement && (
           <button
             onClick={proceedToActivation}
-            className="flex items-center gap-2 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-6 py-2.5 rounded-2xl font-black shadow-[0_4px_0_var(--btn-green-rim)]"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-4 sm:px-6 py-2.5 min-h-12 sm:min-h-11 rounded-2xl font-black shadow-[0_4px_0_var(--btn-green-rim)]"
           >
             <span>ACTIVATION</span>
             <img src="/icons/arrow-right.svg" alt="Next" className="w-5 h-5" />
@@ -131,7 +131,7 @@ export const PlacementBar: React.FC = () => {
         {isActivation && (
           <button
             onClick={proceedToSimulation}
-            className="flex items-center gap-2 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-6 py-2.5 rounded-2xl font-black shadow-[0_4px_0_var(--btn-green-rim)]"
+            className="w-full sm:w-auto justify-center flex items-center gap-2 bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white px-4 sm:px-6 py-2.5 min-h-12 sm:min-h-11 rounded-2xl font-black shadow-[0_4px_0_var(--btn-green-rim)]"
           >
             <span>SIMULATE</span>
             <img src="/icons/zap.svg" alt="Simulate" className="w-5 h-5" />

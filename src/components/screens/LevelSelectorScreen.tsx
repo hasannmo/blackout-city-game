@@ -19,27 +19,27 @@ export const LevelSelectorScreen: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen flex flex-col justify-between py-8 px-10 select-none bg-[var(--sky)] overflow-hidden">
+    <div className="h-dvh w-full flex flex-col justify-between gap-2 py-4 sm:py-8 px-4 sm:px-10 select-none bg-[var(--sky)] overflow-hidden">
       {/* Top Header */}
       <header className="flex items-center justify-between">
         <button
           onClick={() => setScreen("home")}
-          className="flex items-center gap-2 bg-[var(--panel)] hover:bg-amber-100 border-2 border-[var(--outline)] text-[var(--ink)] px-5 py-2.5 rounded-2xl font-black text-sm shadow-sm transition active:translate-y-0.5"
+          className="flex items-center gap-2 bg-[var(--panel)] hover:bg-amber-100 border-2 border-[var(--outline)] text-[var(--ink)] px-3 sm:px-5 py-2.5 min-h-11 rounded-2xl font-black text-sm shadow-sm transition active:translate-y-0.5"
         >
           <img src="/icons/arrow-left.svg" alt="Back" className="w-5 h-5" />
           <span>HOME</span>
         </button>
 
-        <h1 className="text-3xl font-black text-[var(--ink)] tracking-wide">
+        <h1 className="text-lg sm:text-3xl font-black text-[var(--ink)] tracking-wide text-center">
           CAMPAIGN LEVELS
         </h1>
 
-        <div className="w-24" />
+        <div className="w-16 sm:w-24" />
       </header>
 
       {/* Level Selection Cards Grid */}
-      <div className="flex-1 flex items-center justify-center p-4 overflow-y-auto min-h-0">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 max-w-5xl w-full m-auto py-2">
+      <div className="flex-1 flex items-center justify-center p-1 sm:p-4 overflow-y-auto min-h-0">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 max-w-5xl w-full m-auto py-2">
           {campaignLevels.map((lvl, index) => {
             const title = levelTitles[lvl.id] ?? `Level ${index + 1}`;
 
@@ -49,7 +49,7 @@ export const LevelSelectorScreen: React.FC = () => {
                 onClick={() => {
                   loadLevel(lvl);
                 }}
-                className="flex flex-col items-center justify-between p-5 rounded-3xl border-4 border-[var(--outline)] bg-[var(--panel)] hover:-translate-y-1.5 cursor-pointer shadow-[0_6px_0_var(--outline)] transition-all"
+                className="flex flex-col items-center justify-between p-3 sm:p-5 rounded-3xl border-4 border-[var(--outline)] bg-[var(--panel)] hover:-translate-y-1.5 cursor-pointer shadow-[0_6px_0_var(--outline)] transition-all"
               >
                 {/* Level Number Pill */}
                 <span className="text-xs font-black px-3 py-1 bg-amber-200 text-amber-900 border border-[var(--outline)] rounded-full mb-2">
@@ -93,7 +93,7 @@ export const LevelSelectorScreen: React.FC = () => {
       </div>
 
       {/* Footer Info */}
-      <footer className="text-center text-xs font-bold text-gray-600">
+      <footer className="text-center text-xs font-bold text-gray-600 pb-[env(safe-area-inset-bottom)]">
         Choose a level to deploy generators and balance city power networks
       </footer>
     </div>

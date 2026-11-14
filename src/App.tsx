@@ -38,15 +38,15 @@ export function App() {
   }
 
   return (
-    <div className="h-screen w-screen flex flex-col justify-between overflow-hidden relative">
+    <div className="h-dvh w-full flex flex-col justify-between overflow-hidden relative pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] pr-[env(safe-area-inset-right)]">
       {/* Toast Notification */}
       {toastMessage && (
-        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-[var(--alert)] border-2 border-white text-white px-5 py-2.5 rounded-2xl shadow-xl animate-bounce">
-          <img src="/icons/alert-x.svg" alt="Alert" className="w-5 h-5" />
+        <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 w-max max-w-[92vw] bg-[var(--alert)] border-2 border-white text-white px-4 sm:px-5 py-2.5 rounded-2xl shadow-xl animate-bounce">
+          <img src="/icons/alert-x.svg" alt="Alert" className="w-5 h-5 shrink-0" />
           <span className="text-sm font-bold">{toastMessage}</span>
           <button
             onClick={dismissToast}
-            className="ml-2 font-black text-xs hover:opacity-75"
+            className="ml-1 sm:ml-2 w-8 h-8 shrink-0 flex items-center justify-center font-black text-xs hover:opacity-75"
           >
             ✕
           </button>
@@ -57,7 +57,7 @@ export function App() {
       <GameHUD />
 
       {/* Main Playing Area with Board and Toggle-able Live Star Tracker Panel */}
-      <div className="flex-1 min-h-0 flex items-center justify-center gap-6 px-4 py-2 overflow-hidden transition-all duration-300">
+      <div className="flex-1 min-h-0 flex items-center justify-center gap-6 px-2 sm:px-4 py-1 sm:py-2 overflow-hidden transition-all duration-300">
         <GameGrid />
         {showStarSidebar && <StarTrackerPanel />}
       </div>

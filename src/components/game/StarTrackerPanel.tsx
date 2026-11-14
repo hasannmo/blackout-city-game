@@ -9,6 +9,7 @@ export const StarTrackerPanel: React.FC = () => {
   const level = useGameStore((s) => s.level)
   const buildingDefinitions = useGameStore((s) => s.buildingDefinitions)
   const gameState = useGameStore((s) => s.gameState)
+  const toggleStarSidebar = useGameStore((s) => s.toggleStarSidebar)
 
   const activeIds = gameState.activeBuildingIds
 
@@ -18,7 +19,22 @@ export const StarTrackerPanel: React.FC = () => {
   const objectiveText = getObjectiveDescription(level.objective)
 
   return (
-    <aside className="hidden lg:flex flex-col gap-3 w-72 select-none">
+    // Mobile/tablet (<lg): bottom sheet over a dimmed backdrop. Desktop (lg+): normal side column.
+    <aside
+      className="fixed inset-0 z-40 flex items-end bg-black/50 lg:static lg:z-auto lg:block lg:bg-transparent lg:w-72 select-none"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && window.matchMedia('(max-width: 1023px)').matches) {
+          toggleStarSidebar()
+        }
+      }}
+    >
+    <div className="flex flex-col gap-3 w-full max-h-[80dvh] overflow-y-auto p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] bg-[var(--sky)] rounded-t-3xl border-t-4 border-[var(--outline)] lg:p-0 lg:pb-0 lg:max-h-none lg:overflow-visible lg:bg-transparent lg:border-0 lg:rounded-none">
+      <button
+        onClick={toggleStarSidebar}
+        className="lg:hidden self-end h-10 px-4 rounded-xl bg-[var(--panel)] border-2 border-[var(--outline)] text-xs font-black text-[var(--ink)]"
+      >
+        ✕ Close
+      </button>
       {/* Star Progress Bar Card */}
       <div className="bg-[var(--panel)] border-4 border-[var(--outline)] rounded-3xl p-5 shadow-lg flex flex-col items-center">
         <span className="text-xs font-black uppercase tracking-wider text-gray-500 mb-2">
@@ -186,6 +202,7 @@ export const StarTrackerPanel: React.FC = () => {
           </div>
         </div>
       </div>
+    </div>
     </aside>
   )
 }

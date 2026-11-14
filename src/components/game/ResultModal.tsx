@@ -15,13 +15,13 @@ export const ResultModal: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-[var(--panel)] border-4 border-[var(--outline)] rounded-3xl p-8 max-w-md w-full shadow-2xl flex flex-col items-center text-center">
+      <div className="bg-[var(--panel)] border-4 border-[var(--outline)] rounded-3xl p-5 sm:p-8 max-w-md w-full max-h-[92dvh] overflow-y-auto shadow-2xl flex flex-col items-center text-center">
         {/* Stars Display */}
         <div className="flex items-center gap-3 mb-4">
           {[1, 2, 3].map((starIdx) => (
             <div
               key={starIdx}
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center border-2 border-[var(--outline)] shadow transition-transform ${
+              className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center border-2 border-[var(--outline)] shadow transition-transform ${
                 starIdx <= stars
                   ? "bg-[var(--power-yellow)] scale-110"
                   : "bg-gray-300 opacity-60"
@@ -36,7 +36,7 @@ export const ResultModal: React.FC = () => {
           ))}
         </div>
 
-        <h2 className="text-3xl font-black text-[var(--ink)] mb-2">
+        <h2 className="text-2xl sm:text-3xl font-black text-[var(--ink)] mb-2">
           {completed ? "LEVEL RESTORED!" : "BLACKOUT CONTINUES"}
         </h2>
 
@@ -57,11 +57,11 @@ export const ResultModal: React.FC = () => {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-3 w-full">
+        <div className="flex items-stretch gap-2 sm:gap-3 w-full">
           {/* Level Selector Button */}
           <button
             onClick={() => setScreen("level-select")}
-            className="flex-1 bg-amber-100 hover:bg-amber-200 active:translate-y-0.5 border-2 border-[var(--outline)] text-[var(--ink)] py-3 rounded-2xl font-black text-xs sm:text-sm shadow-sm transition"
+            className="flex-1 bg-amber-100 hover:bg-amber-200 active:translate-y-0.5 border-2 border-[var(--outline)] text-[var(--ink)] py-3 min-h-11 rounded-2xl font-black text-xs sm:text-sm shadow-sm transition"
             title="Back to Level Selector"
           >
             LEVEL
@@ -70,7 +70,7 @@ export const ResultModal: React.FC = () => {
           {/* Adjust Button */}
           <button
             onClick={navigateBack}
-            className="flex-1 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white py-3 rounded-2xl font-black text-xs sm:text-sm shadow-[0_4px_0_var(--btn-blue-rim)] transition"
+            className="flex-1 bg-[var(--btn-blue)] hover:brightness-105 active:translate-y-0.5 border-2 border-[var(--outline)] text-white py-3 min-h-11 rounded-2xl font-black text-xs sm:text-sm shadow-[0_4px_0_var(--btn-blue-rim)] transition"
           >
             ADJUST
           </button>
@@ -83,7 +83,7 @@ export const ResultModal: React.FC = () => {
               }
             }}
             disabled={!canProceedToNext}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-3 rounded-2xl font-black text-xs sm:text-sm border-2 border-[var(--outline)] transition-all ${
+            className={`flex-1 flex items-center justify-center gap-1.5 py-3 min-h-11 rounded-2xl font-black text-xs sm:text-sm border-2 border-[var(--outline)] transition-all ${
               canProceedToNext
                 ? "bg-[var(--btn-green)] hover:brightness-105 active:translate-y-0.5 text-white shadow-[0_4px_0_var(--btn-green-rim)] cursor-pointer"
                 : "bg-gray-300 text-gray-500 border-gray-400 cursor-not-allowed opacity-60 shadow-none"

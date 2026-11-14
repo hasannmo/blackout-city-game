@@ -9,6 +9,7 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
+    "benchmark:csp": "tsx scripts/benchmark-csp.ts",
     "typecheck": "tsc -b",
     "format": "prettier --write ."
   },

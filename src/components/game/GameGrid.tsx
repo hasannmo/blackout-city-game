@@ -118,6 +118,9 @@ export const GameGrid: React.FC = () => {
       const hasEast = levelIndex.roadCellToComponentId.has(`${x + 1},${y}`);
       const hasWest = levelIndex.roadCellToComponentId.has(`${x - 1},${y}`);
 
+      const isCellHovered =
+        hoverCoord !== null && hoverCoord.x === x && hoverCoord.y === y;
+
       renderCells.push(
         <div
           key={key}
@@ -134,13 +137,13 @@ export const GameGrid: React.FC = () => {
             }
           }}
           className={`relative ${cellSizeClass} border border-black/10 flex items-center justify-center cursor-pointer transition-all ${
-            hoverCoord !== null && hoverCoord.x === x && hoverCoord.y === y
+            isCellHovered && isGhost
               ? "z-40"
               : isGhost
                 ? "z-30"
                 : buildingInfo
                   ? buildingInfo.isOrigin
-                    ? "z-20"
+                    ? "z-30"
                     : "z-10"
                   : ""
           }`}

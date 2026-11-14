@@ -85,6 +85,9 @@ Open your browser and navigate to `http://localhost:5173`.
 # Run unit tests
 npm test
 
+# Run CSP Academic / Algorithm Benchmark script
+npm run benchmark:csp
+
 # Run TypeScript typecheck
 npm run typecheck
 

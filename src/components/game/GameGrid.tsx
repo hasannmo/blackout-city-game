@@ -60,15 +60,6 @@ export const GameGrid: React.FC = () => {
 
   // Touch devices have no hover: first tap previews, second tap on the same tile places.
   const pointerTypeRef = useRef<string>("mouse");
-  const [isCoarse, setIsCoarse] = useState<boolean>(false);
-  useEffect(() => {
-    if (!window.matchMedia) return;
-    const mq = window.matchMedia("(pointer: coarse)");
-    const update = () => setIsCoarse(mq.matches);
-    update();
-    mq.addEventListener("change", update);
-    return () => mq.removeEventListener("change", update);
-  }, []);
 
   // New level -> reset zoom. Phase change -> drop any stale touch preview.
   useEffect(() => {
@@ -356,15 +347,6 @@ export const GameGrid: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Touch hint (phones/tablets only) */}
-      {isCoarse && gameState.phase === "placement" && selectedType && (
-        <div className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 z-30 max-w-[92%] rounded-full bg-[var(--ink)]/85 px-3 py-1 text-[11px] font-bold text-white text-center">
-          {hoverCoord
-            ? "Tap again to place · tap another tile to move"
-            : "Tap a tile to preview · tap a generator to remove"}
-        </div>
-      )}
     </div>
   );
 };

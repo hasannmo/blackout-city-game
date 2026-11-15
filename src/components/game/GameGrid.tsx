@@ -295,25 +295,25 @@ export const GameGrid: React.FC = () => {
 
   return (
     <div className="relative flex-1 min-h-0 w-full h-full flex flex-col items-center overflow-hidden">
-      {/* Zoom Controls: own row on phones (never covers the board), floating on sm+ */}
-      <div className="self-end mr-2 mb-1 sm:mr-0 sm:mb-0 sm:absolute sm:top-2 sm:right-2 z-40 flex items-center gap-1.5 bg-[var(--panel)]/95 backdrop-blur-xs p-1 sm:p-1.5 rounded-2xl border-2 border-[var(--outline)] shadow-lg select-none">
+      {/* Zoom Controls: compact on phones, comfortable on desktop */}
+      <div className="self-end mr-1 mb-0.5 sm:mr-0 sm:mb-0 sm:absolute sm:top-2 sm:right-2 z-40 flex items-center gap-0.5 sm:gap-1.5 bg-[var(--panel)]/95 backdrop-blur-xs p-0.5 sm:p-1.5 rounded-xl sm:rounded-2xl border sm:border-2 border-[var(--outline)] shadow-md select-none">
         <button
           onClick={handleZoomOut}
-          className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-base sm:text-sm border border-[var(--outline)] transition active:scale-95"
+          className="w-7 h-7 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg sm:rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-sm border border-[var(--outline)] transition active:scale-95"
           title="Zoom Out"
         >
           −
         </button>
         <button
           onClick={handleResetZoom}
-          className="px-2 min-w-12 h-10 sm:h-7 flex items-center justify-center rounded-xl hover:bg-amber-100 text-[var(--ink)] font-bold text-xs transition"
+          className="px-1.5 min-w-9 h-7 flex items-center justify-center rounded-lg sm:rounded-xl hover:bg-amber-100 text-[var(--ink)] font-bold text-[10px] sm:text-xs transition"
           title="Reset Zoom"
         >
           {Math.round(zoom * 100)}%
         </button>
         <button
           onClick={handleZoomIn}
-          className="w-10 h-10 sm:w-7 sm:h-7 flex items-center justify-center rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-base sm:text-sm border border-[var(--outline)] transition active:scale-95"
+          className="w-7 h-7 sm:w-7 sm:h-7 flex items-center justify-center rounded-lg sm:rounded-xl bg-amber-50 hover:bg-amber-100 text-[var(--ink)] font-black text-sm border border-[var(--outline)] transition active:scale-95"
           title="Zoom In"
         >
           +

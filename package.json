@@ -9,7 +9,9 @@
     "lint": "oxlint",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:python": "PYTHONPATH=python_csp python3 -m unittest python_csp/test_solver.py",
     "benchmark:csp": "tsx scripts/benchmark-csp.ts",
+    "benchmark:csp:py": "python3 python_csp/benchmark.py",
     "typecheck": "tsc -b",
     "format": "prettier --write ."
   },

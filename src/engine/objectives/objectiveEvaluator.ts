@@ -4,9 +4,7 @@ import type {
   ObjectiveCondition,
 } from "../../types";
 
-export function getObjectiveDescription(
-  condition: ObjectiveCondition,
-): string {
+export function getObjectiveDescription(condition: ObjectiveCondition): string {
   switch (condition.type) {
     case "allBuildingsPowered":
       return "Power all buildings in the district";
@@ -127,7 +125,13 @@ export function computeLiveStarState(
   const star2Satisfied = star1Satisfied && currentScore >= level.stars.two;
   const star3Satisfied = star1Satisfied && currentScore >= level.stars.three;
 
-  const starCount = star3Satisfied ? 3 : star2Satisfied ? 2 : star1Satisfied ? 1 : 0;
+  const starCount = star3Satisfied
+    ? 3
+    : star2Satisfied
+      ? 2
+      : star1Satisfied
+        ? 1
+        : 0;
 
   return {
     star1Satisfied,

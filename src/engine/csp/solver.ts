@@ -97,7 +97,8 @@ function solveActivationForCapacities(
         if (currentDemand <= gen) {
           if (
             currentScore > bestSubsetScore ||
-            (currentScore === bestSubsetScore && currentDemand < bestSubsetDemand)
+            (currentScore === bestSubsetScore &&
+              currentDemand < bestSubsetDemand)
           ) {
             bestSubsetScore = currentScore;
             bestSubsetDemand = currentDemand;
@@ -143,7 +144,8 @@ export function solveCSPLevel(
 ): CSPSolverResult {
   const algorithm = options.algorithm ?? "mrv_forward_checking";
   const mode = options.mode ?? "optimization";
-  const timeoutMs = options.timeoutMs ?? (mode === "feasibility" ? 5000 : 15000);
+  const timeoutMs =
+    options.timeoutMs ?? (mode === "feasibility" ? 5000 : 15000);
 
   const genDef = levelIndex.buildingDefinitions["generator"] ?? {
     width: 1,
@@ -203,7 +205,8 @@ export function solveCSPLevel(
       if (
         !internal.bestSolution ||
         evalRes.score > internal.bestScore ||
-        (evalRes.score === internal.bestScore && evalRes.stars > internal.bestSolution.stars)
+        (evalRes.score === internal.bestScore &&
+          evalRes.stars > internal.bestSolution.stars)
       ) {
         internal.bestScore = evalRes.score;
         internal.bestSolution = {
@@ -243,7 +246,11 @@ export function solveCSPLevel(
       }
     } else if (algorithm === "mrv") {
       // MRV heuristic: order networks by smallest remaining deficit / most constrained
-      const networkDeficits: { netId: string; deficit: number; count: number }[] = [];
+      const networkDeficits: {
+        netId: string;
+        deficit: number;
+        count: number;
+      }[] = [];
       for (const comp of levelIndex.roadComponents) {
         const netId = comp.id;
         const netBuildings = levelIndex.level.buildings.filter(
@@ -263,7 +270,9 @@ export function solveCSPLevel(
       }
 
       // Sort by fewest available candidate spots first (classic MRV), then deficit
-      networkDeficits.sort((a, b) => a.count - b.count || b.deficit - a.deficit);
+      networkDeficits.sort(
+        (a, b) => a.count - b.count || b.deficit - a.deficit,
+      );
 
       for (const item of networkDeficits) {
         const list = netCandidatesMap.get(item.netId) ?? [];
@@ -273,7 +282,11 @@ export function solveCSPLevel(
       }
     } else {
       // MRV with Forward Checking (pruning redundant capacity & impossible paths)
-      const networkPriorities: { netId: string; deficit: number; count: number }[] = [];
+      const networkPriorities: {
+        netId: string;
+        deficit: number;
+        count: number;
+      }[] = [];
       for (const comp of levelIndex.roadComponents) {
         const netId = comp.id;
         const netBuildings = levelIndex.level.buildings.filter(
@@ -304,7 +317,9 @@ export function solveCSPLevel(
       }
 
       // Sort MRV
-      networkPriorities.sort((a, b) => a.count - b.count || b.deficit - a.deficit);
+      networkPriorities.sort(
+        (a, b) => a.count - b.count || b.deficit - a.deficit,
+      );
 
       for (const item of networkPriorities) {
         const list = netCandidatesMap.get(item.netId) ?? [];
@@ -317,7 +332,11 @@ export function solveCSPLevel(
     // Symmetry breaking: try valid placements
     for (const candIdx of candidateIndices) {
       const cand = candidates[candIdx];
-      const footprint = getFootprintCells(cand.origin, genDef.width, genDef.height);
+      const footprint = getFootprintCells(
+        cand.origin,
+        genDef.width,
+        genDef.height,
+      );
 
       let conflict = false;
       for (const cell of footprint) {
@@ -331,7 +350,10 @@ export function solveCSPLevel(
       // Assign variable
       for (const cell of footprint) occupiedSet.add(cellKey(cell));
       currentPlacements.push({ typeId: "generator", origin: cand.origin });
-      currentNetGen.set(cand.networkId, (currentNetGen.get(cand.networkId) ?? 0) + genDef.output);
+      currentNetGen.set(
+        cand.networkId,
+        (currentNetGen.get(cand.networkId) ?? 0) + genDef.output,
+      );
 
       // Recurse
       const done = backtrack(placedCount + 1, candIdx + 1);
@@ -341,7 +363,10 @@ export function solveCSPLevel(
       internal.backtracks++;
       for (const cell of footprint) occupiedSet.delete(cellKey(cell));
       currentPlacements.pop();
-      currentNetGen.set(cand.networkId, (currentNetGen.get(cand.networkId) ?? 0) - genDef.output);
+      currentNetGen.set(
+        cand.networkId,
+        (currentNetGen.get(cand.networkId) ?? 0) - genDef.output,
+      );
     }
 
     return false;
@@ -398,7 +423,9 @@ export function runCSPBenchmarkComparison(
   }
 
   return {
-    stats: bestOverallResult ? bestOverallResult.stats : comparisonStats[comparisonStats.length - 1],
+    stats: bestOverallResult
+      ? bestOverallResult.stats
+      : comparisonStats[comparisonStats.length - 1],
     solution: bestOverallResult ? bestOverallResult.solution : null,
     comparison: comparisonStats,
   };

@@ -4,7 +4,10 @@ import l1 from "../../src/data/campaign/level-01.json";
 import l2 from "../../src/data/campaign/level-02.json";
 import l5 from "../../src/data/campaign/level-05.json";
 import { buildLevelIndex } from "../../src/engine/connectivity/networkAssignment";
-import { solveCSPLevel, runCSPBenchmarkComparison } from "../../src/engine/csp/solver";
+import {
+  solveCSPLevel,
+  runCSPBenchmarkComparison,
+} from "../../src/engine/csp/solver";
 import type { LevelDefinition, BuildingDefinitionsMap } from "../../src/types";
 
 describe("Constraint Satisfaction Problem (CSP) Solver & Benchmarks", () => {
@@ -14,9 +17,18 @@ describe("Constraint Satisfaction Problem (CSP) Solver & Benchmarks", () => {
     const lvl1 = l1 as unknown as LevelDefinition;
     const index = buildLevelIndex(lvl1, defs);
 
-    const resPlain = solveCSPLevel(index, { algorithm: "backtracking", mode: "feasibility" });
-    const resMRV = solveCSPLevel(index, { algorithm: "mrv", mode: "feasibility" });
-    const resFC = solveCSPLevel(index, { algorithm: "mrv_forward_checking", mode: "feasibility" });
+    const resPlain = solveCSPLevel(index, {
+      algorithm: "backtracking",
+      mode: "feasibility",
+    });
+    const resMRV = solveCSPLevel(index, {
+      algorithm: "mrv",
+      mode: "feasibility",
+    });
+    const resFC = solveCSPLevel(index, {
+      algorithm: "mrv_forward_checking",
+      mode: "feasibility",
+    });
 
     expect(resPlain.solution).not.toBeNull();
     expect(resPlain.solution?.isComplete).toBe(true);
@@ -44,7 +56,10 @@ describe("Constraint Satisfaction Problem (CSP) Solver & Benchmarks", () => {
     const lvl5 = l5 as unknown as LevelDefinition;
     const index = buildLevelIndex(lvl5, defs);
 
-    const res = solveCSPLevel(index, { algorithm: "mrv_forward_checking", mode: "optimization" });
+    const res = solveCSPLevel(index, {
+      algorithm: "mrv_forward_checking",
+      mode: "optimization",
+    });
     expect(res.solution).not.toBeNull();
     expect(res.solution?.isComplete).toBe(true);
     expect(res.solution?.stars).toBeGreaterThanOrEqual(2);

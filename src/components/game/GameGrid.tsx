@@ -23,8 +23,10 @@ export const GameGrid: React.FC = () => {
   // zoom is a multiplier on top of the automatic "fit to screen" scale
   const [zoom, setZoom] = useState<number>(1);
 
-  const handleZoomIn = () => setZoom((z) => Math.min(3, Number((z + 0.25).toFixed(2))));
-  const handleZoomOut = () => setZoom((z) => Math.max(0.5, Number((z - 0.25).toFixed(2))));
+  const handleZoomIn = () =>
+    setZoom((z) => Math.min(3, Number((z + 0.25).toFixed(2))));
+  const handleZoomOut = () =>
+    setZoom((z) => Math.max(0.5, Number((z - 0.25).toFixed(2))));
   const handleResetZoom = () => setZoom(1);
 
   const width = level.grid.width;

@@ -110,7 +110,11 @@ export const BuildingSprite: React.FC<BuildingProps> = ({
             }`}
           >
             <span className="text-[10px] leading-none">{demand}</span>
-            <img src="/icons/zap.svg" alt="demand" className="w-2.5 h-2.5 inline" />
+            <img
+              src="/icons/zap.svg"
+              alt="demand"
+              className="w-2.5 h-2.5 inline"
+            />
           </div>
         )}
 

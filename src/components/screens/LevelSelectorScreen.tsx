@@ -26,7 +26,11 @@ export const LevelSelectorScreen: React.FC = () => {
           onClick={() => setScreen("home")}
           className="flex items-center gap-1.5 sm:gap-2 bg-[var(--panel)] hover:bg-amber-100 border-2 border-[var(--outline)] text-[var(--ink)] px-2.5 sm:px-5 py-1.5 sm:py-2.5 min-h-9 sm:min-h-11 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm shadow-sm transition active:translate-y-0.5"
         >
-          <img src="/icons/arrow-left.svg" alt="Back" className="w-4 h-4 sm:w-5 sm:h-5" />
+          <img
+            src="/icons/arrow-left.svg"
+            alt="Back"
+            className="w-4 h-4 sm:w-5 sm:h-5"
+          />
           <span>HOME</span>
         </button>
 

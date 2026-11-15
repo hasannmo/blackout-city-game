@@ -14,17 +14,42 @@ import { solveCSPLevel } from "../src/engine/csp/solver";
 import type { LevelDefinition, BuildingDefinitionsMap } from "../src/types";
 import type { CSPSolverAlgorithm } from "../src/engine/csp/types";
 
-const levels = [l1, l2, l3, l4, l5, l6, l7, l8, l9, l10] as unknown as LevelDefinition[];
+const levels = [
+  l1,
+  l2,
+  l3,
+  l4,
+  l5,
+  l6,
+  l7,
+  l8,
+  l9,
+  l10,
+] as unknown as LevelDefinition[];
 const defs = bDefs as unknown as BuildingDefinitionsMap;
-const algorithms: CSPSolverAlgorithm[] = ["backtracking", "mrv", "mrv_forward_checking"];
+const algorithms: CSPSolverAlgorithm[] = [
+  "backtracking",
+  "mrv",
+  "mrv_forward_checking",
+];
 
-console.log("==========================================================================================================");
-console.log("                        BLACKOUT CITY - CSP ALGORITHMS ACADEMIC BENCHMARK                               ");
-console.log("==========================================================================================================");
-console.log("Level,Algorithm,DurationMs,NodesVisited,Backtracks,SolutionFound,Score");
+console.log(
+  "==========================================================================================================",
+);
+console.log(
+  "                        BLACKOUT CITY - CSP ALGORITHMS ACADEMIC BENCHMARK                               ",
+);
+console.log(
+  "==========================================================================================================",
+);
+console.log(
+  "Level,Algorithm,DurationMs,NodesVisited,Backtracks,SolutionFound,Score",
+);
 
 const rows: string[] = [];
-rows.push("Level,Algorithm,DurationMs,NodesVisited,Backtracks,SolutionFound,Score");
+rows.push(
+  "Level,Algorithm,DurationMs,NodesVisited,Backtracks,SolutionFound,Score",
+);
 
 for (const lvl of levels) {
   const index = buildLevelIndex(lvl, defs);
@@ -35,5 +60,7 @@ for (const lvl of levels) {
     rows.push(line);
   }
 }
-console.log("==========================================================================================================");
+console.log(
+  "==========================================================================================================",
+);
 console.log("Benchmark complete!");

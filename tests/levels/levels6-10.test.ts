@@ -37,7 +37,10 @@ describe("Campaign Levels 6-10 validation", () => {
       // Check all buildings touch exactly one network
       for (const b of lvl.buildings) {
         const netId = index.buildingToNetworkId.get(b.id);
-        expect(netId, `Building ${b.id} in ${lvl.id} should touch exactly 1 road network`).not.toBeNull();
+        expect(
+          netId,
+          `Building ${b.id} in ${lvl.id} should touch exactly 1 road network`,
+        ).not.toBeNull();
       }
 
       // Check all buildings stay within grid bounds

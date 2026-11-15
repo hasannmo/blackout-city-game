@@ -1,5 +1,9 @@
 import type { LevelIndex } from "../connectivity/networkAssignment";
-import { cellKey, getFootprintBoundaryNeighbors, getFootprintCells } from "../grid/footprint";
+import {
+  cellKey,
+  getFootprintBoundaryNeighbors,
+  getFootprintCells,
+} from "../grid/footprint";
 import type { CSPPlacementCandidate } from "./types";
 
 /**
@@ -32,7 +36,11 @@ export function getConnectedGeneratorCandidates(
       if (overlaps) continue;
 
       // Check boundary road connections
-      const boundary = getFootprintBoundaryNeighbors(origin, genWidth, genHeight);
+      const boundary = getFootprintBoundaryNeighbors(
+        origin,
+        genWidth,
+        genHeight,
+      );
       const touchingNetworks = new Set<string>();
 
       for (const b of boundary) {

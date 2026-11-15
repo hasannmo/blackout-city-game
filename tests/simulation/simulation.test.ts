@@ -20,7 +20,8 @@ describe("Campaign Levels 1 through 5 Validation & Gameplay", () => {
   const levels = [level1Data, level2Data, level3Data, level4Data, level5Data];
 
   it("validates all 5 campaign levels against Zod schemas", () => {
-    const parsedBuildings = BuildingDefinitionsMapSchema.parse(buildingDefinitions);
+    const parsedBuildings =
+      BuildingDefinitionsMapSchema.parse(buildingDefinitions);
     expect(parsedBuildings.house.demand).toBe(2);
     expect(parsedBuildings.generator.output).toBe(5);
 
@@ -56,7 +57,10 @@ describe("Campaign Levels 1 through 5 Validation & Gameplay", () => {
   });
 
   it("verifies Level 2 3-star solution path", () => {
-    const index = buildLevelIndex(level2Data as any, buildingDefinitions as any);
+    const index = buildLevelIndex(
+      level2Data as any,
+      buildingDefinitions as any,
+    );
     let state: GameState = {
       phase: "placement",
       generators: [],

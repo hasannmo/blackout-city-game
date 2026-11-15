@@ -5,7 +5,8 @@ export interface CSPPlacementCandidate {
   networkId: string;
 }
 
-export type CSPSolverAlgorithm = "backtracking" | "mrv" | "mrv_forward_checking";
+export type CSPSolverAlgorithm =
+  "backtracking" | "mrv" | "mrv_forward_checking";
 export type CSPSolverMode = "feasibility" | "optimization";
 
 export interface CSPSolverOptions {

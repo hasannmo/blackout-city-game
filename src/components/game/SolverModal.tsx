@@ -15,7 +15,10 @@ interface SolverModalProps {
   onClose: () => void;
 }
 
-export const SolverModal: React.FC<SolverModalProps> = ({ isOpen, onClose }) => {
+export const SolverModal: React.FC<SolverModalProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const levelIndex = useGameStore((s) => s.levelIndex);
   const level = useGameStore((s) => s.level);
   const [algorithm, setAlgorithm] = useState<CSPSolverAlgorithm>(

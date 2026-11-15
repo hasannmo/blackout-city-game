@@ -43,7 +43,8 @@ export const GameHUD: React.FC = () => {
         <div className="hidden sm:block h-6 w-px bg-gray-300 mx-1" />
         <div className="flex items-center gap-1.5 shrink-0">
           <span className="text-[10px] sm:text-xs font-bold bg-amber-100 text-amber-900 border border-amber-300 px-1.5 sm:px-2 py-0.5 rounded-full">
-            <span className="hidden sm:inline">Phase: </span><strong className="uppercase">{gameState.phase}</strong>
+            <span className="hidden sm:inline">Phase: </span>
+            <strong className="uppercase">{gameState.phase}</strong>
           </span>
         </div>
       </div>
@@ -120,10 +121,20 @@ export const GameHUD: React.FC = () => {
               ? "bg-[var(--power-yellow)] text-amber-950"
               : "bg-[var(--panel)] hover:bg-amber-100 text-[var(--ink)]"
           }`}
-          title={showStarSidebar ? "Hide Objectives & Stars" : "Show Objectives & Stars"}
+          title={
+            showStarSidebar
+              ? "Hide Objectives & Stars"
+              : "Show Objectives & Stars"
+          }
         >
-          <img src="/icons/star.svg" alt="Stars" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-          <span className="hidden sm:inline">{showStarSidebar ? "Hide Goals" : "Goals"}</span>
+          <img
+            src="/icons/star.svg"
+            alt="Stars"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+          />
+          <span className="hidden sm:inline">
+            {showStarSidebar ? "Hide Goals" : "Goals"}
+          </span>
         </button>
 
         <button
@@ -131,7 +142,11 @@ export const GameHUD: React.FC = () => {
           className="flex items-center justify-center gap-1 bg-[var(--panel)] hover:bg-amber-100 text-[var(--ink)] border-2 border-[var(--outline)] min-w-8 h-8 sm:min-w-10 sm:h-10 px-2 sm:px-3 rounded-lg sm:rounded-xl text-xs font-bold transition shadow-sm active:translate-y-0.5"
           title="Reset Level"
         >
-          <img src="/icons/reset.svg" alt="Reset" className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+          <img
+            src="/icons/reset.svg"
+            alt="Reset"
+            className="w-3.5 h-3.5 sm:w-4 sm:h-4"
+          />
           <span className="hidden sm:inline">Reset</span>
         </button>
       </div>

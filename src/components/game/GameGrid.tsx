@@ -62,9 +62,11 @@ export const GameGrid: React.FC = () => {
   const pointerTypeRef = useRef<string>("mouse");
 
   // New level -> reset zoom. Phase change -> drop any stale touch preview.
-  useEffect(() => {
+  const [prevLevelId, setPrevLevelId] = useState<string>(level.id);
+  if (prevLevelId !== level.id) {
+    setPrevLevelId(level.id);
     setZoom(1);
-  }, [level.id]);
+  }
   useEffect(() => {
     setHoverCoordinate(null);
   }, [gameState.phase, setHoverCoordinate]);

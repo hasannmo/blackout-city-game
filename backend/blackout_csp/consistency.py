@@ -123,7 +123,6 @@ class NodeConsistencyResult:
 
 
 def node_consistency(csp: GeneratorCSP, domains: Optional[Domains] = None) -> NodeConsistencyResult:
-    """Buang nilai yang melanggar constraint unary dari setiap domain."""
     domains = domains if domains is not None else csp.raw_domains()
     reasons: Dict[str, int] = {}
     result: Domains = {}

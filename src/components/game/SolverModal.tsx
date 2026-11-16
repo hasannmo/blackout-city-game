@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import {
   solveCSPLevel,
   runCSPBenchmarkComparison,
-} from "../../engine/csp/solver";
+  preloadSolver,
+} from "../../api/solverClient";
 import type {
   CSPSolverAlgorithm,
   CSPSolverMode,
@@ -19,7 +20,7 @@ export const SolverModal: React.FC<SolverModalProps> = ({
   isOpen,
   onClose,
 }) => {
-  const levelIndex = useGameStore((s) => s.levelIndex);
+  const buildingDefinitions = useGameStore((s) => s.buildingDefinitions);
   const level = useGameStore((s) => s.level);
   const [algorithm, setAlgorithm] = useState<CSPSolverAlgorithm>(
     "mrv_forward_checking",
@@ -28,25 +29,30 @@ export const SolverModal: React.FC<SolverModalProps> = ({
   const [runComparison, setRunComparison] = useState<boolean>(true);
   const [isSolving, setIsSolving] = useState<boolean>(false);
   const [result, setResult] = useState<CSPSolverResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  // Muat runtime Python (Pyodide) di latar belakang saat modal dibuka.
+  useEffect(() => {
+    if (isOpen) preloadSolver().catch(() => undefined);
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
-  const handleSolve = () => {
+  // Pencarian CSP dijalankan oleh Python (Pyodide) langsung di browser.
+  const handleSolve = async () => {
     setIsSolving(true);
-    // Slight timeout to let loading state paint
-    setTimeout(() => {
-      try {
-        if (runComparison) {
-          const compResult = runCSPBenchmarkComparison(levelIndex, mode);
-          setResult(compResult);
-        } else {
-          const singleResult = solveCSPLevel(levelIndex, { algorithm, mode });
-          setResult(singleResult);
-        }
-      } finally {
-        setIsSolving(false);
-      }
-    }, 50);
+    setError(null);
+    try {
+      const res = runComparison
+        ? await runCSPBenchmarkComparison(level, buildingDefinitions, mode)
+        : await solveCSPLevel(level, buildingDefinitions, { algorithm, mode });
+      setResult(res);
+    } catch (e) {
+      setResult(null);
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setIsSolving(false);
+    }
   };
 
   return (
@@ -183,6 +189,13 @@ export const SolverModal: React.FC<SolverModalProps> = ({
             </>
           )}
         </button>
+
+        {/* Error (mis. backend Python belum dijalankan) */}
+        {error && (
+          <div className="text-xs font-bold text-red-700 bg-red-50 border-2 border-red-300 rounded-xl p-3 mb-4">
+            {error}
+          </div>
+        )}
 
         {/* Benchmark Results Display */}
         {result && (

@@ -232,7 +232,7 @@ class _CSPSearch:
 
                 if self.mode == "feasibility":
                     return True
-                if ev.score >= self.max_possible_score and ev.stars == 3:
+                if ev.stars == 3:
                     return True
 
         if placed_count >= self.inventory_count:

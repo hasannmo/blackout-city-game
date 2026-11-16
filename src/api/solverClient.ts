@@ -37,8 +37,7 @@ interface WorkerResponse {
 }
 
 type SolveEnvelope =
-  | { ok: true; result: CSPSolverResult }
-  | { ok: false; error: string };
+  { ok: true; result: CSPSolverResult } | { ok: false; error: string };
 
 let worker: Worker | null = null;
 let ready: Promise<void> | null = null;
@@ -104,9 +103,14 @@ export function preloadSolver(): Promise<void> {
   return ensureReady();
 }
 
-async function runPython(body: Record<string, unknown>): Promise<CSPSolverResult> {
+async function runPython(
+  body: Record<string, unknown>,
+): Promise<CSPSolverResult> {
   await ensureReady();
-  const text = await callWorker({ type: "solve", payload: JSON.stringify(body) });
+  const text = await callWorker({
+    type: "solve",
+    payload: JSON.stringify(body),
+  });
   const envelope = JSON.parse(text) as SolveEnvelope;
   if (!envelope.ok) throw new Error(envelope.error);
   return envelope.result;

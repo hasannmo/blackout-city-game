@@ -70,22 +70,29 @@ All 10 campaign levels are available without sequential locks and can achieve a 
 
 ## 🧠 Constraint Satisfaction Problem (CSP) Solver
 
-The game features custom, pure implementations (no black-box libraries) of three CSP search algorithms in both **TypeScript** and **Python**:
+The game features custom, pure implementations (no external solver libraries) of **5 CSP search algorithms** written in **Python**, executed directly in-browser using a **Pyodide Web Worker** (`src/api/solverClient.ts` / `public/pyodide-worker.js`), as well as via standalone Python CLI and benchmark scripts (`backend/blackout_csp/`):
 
-1. **Plain Backtracking**: Systematic depth-first exploration with candidate domain filtering and symmetry breaking.
-2. **Backtracking with MRV (Minimum Remaining Values)**: Dynamic variable ordering prioritizing networks with fewest remaining valid candidate placements and largest power deficit.
-3. **Backtracking with MRV + Forward Checking**: Combines MRV ordering with forward constraint checking to prune redundant branches on networks that have already satisfied power demand.
+1. **Plain Backtracking (`backtracking`)**: Systematic depth-first exploration with candidate domain filtering and symmetry breaking (ascending candidate index ordering).
+2. **Backtracking with MRV (`mrv`)**: Dynamic variable ordering prioritizing networks with the fewest remaining valid candidate placements (Minimum Remaining Values heuristic).
+3. **Backtracking with MRV + Forward Checking (`mrv_forward_checking`)**: Combines MRV ordering with forward constraint checking to prune candidates on networks that have already satisfied power demand.
+4. **MRV + $k=1$ Node Consistency (`mrv_nc`)**: Enforces 1-consistency by evaluating unary constraints across all grid cells (footprint boundaries, road adjacency, obstacle collision) to construct explicit valid domains before search.
+5. **MRV + $k=2$ Arc Consistency / AC-3 (`mrv_ac3`)**: Enforces 2-consistency via AC-3 and Maintaining Arc Consistency (MAC) during search, pruning candidate values that lack supporting compatible assignments among remaining generators.
 
-### Algorithm Benchmark Execution
+### Solver Verification & Benchmarks
 
 ```bash
-# Run the TypeScript benchmark script across all 10 campaign levels
-npm run benchmark:csp
+# Run backend Python CSP unit tests (17 tests)
+npm run test:python
+# or directly:
+PYTHONPATH=backend python3 -m unittest discover -s backend/tests
 
-# Run the Python benchmark script across all 10 campaign levels
-npm run benchmark:csp:py
-# or
-python3 python_csp/benchmark.py
+# Run Python CSP Benchmark across all 10 campaign levels (generates benchmark_results.csv)
+npm run benchmark:csp
+# or directly:
+python3 backend/benchmark_csp.py
+
+# Run consistency verification tool (k=1 NC, k=2 AC-3, k=3 PC)
+python3 backend/check_consistency.py
 ```
 
 ---
@@ -98,16 +105,22 @@ python3 python_csp/benchmark.py
 - **Styling**: [Tailwind CSS v4](https://tailwindcss.com/) with responsive mobile scaling and Day/Night design tokens
 - **Typography**: [Google Sans Flex Variable Font](https://fontsource.org/fonts/google-sans-flex)
 - **Data Validation**: [Zod](https://zod.dev/)
-- **Testing**: [Vitest](https://vitest.dev/) & Python `unittest`
+- **Testing**: [Vitest](https://vitest.dev/) (frontend engine & connectivity) & Python `unittest` (backend CSP solver & consistency)
 - **Linter & Formatter**: [oxlint](https://oxc.rs/) & [Prettier](https://prettier.io/)
+- **In-Browser Python Runtime**: [Pyodide](https://pyodide.org/) via dedicated Web Worker (`public/pyodide-worker.js`)
 
 ### Architecture & Separation of Concerns
 
-- `src/engine/`: Pure, deterministic TypeScript logic with **zero** React/UI dependencies. Handles road component BFS, boundary neighbor calculations, capacity reports, activation tracking, simulation scoring, and CSP search.
-- `src/stores/`: Zustand store (`gameStore.ts`) connecting UI state with pure engine functions.
-- `src/components/`: Modular React components split into game grid (`GameGrid`), HUD (`GameHUD`), placement toolbar (`PlacementBar`), building sprites, and screens (`HomeScreen`, `LevelSelectorScreen`).
+- `backend/blackout_csp/`: Core Python CSP solver package.
+  - `solver.py`: 5 CSP search algorithms (Backtracking, MRV, MRV+FC, MRV+NC $k=1$, MRV+AC3 $k=2$) with feasibility and optimization modes.
+  - `consistency.py`: Formal constraint consistency checkers ($k=1$ Node, $k=2$ Arc / AC-3, $k=3$ Path Consistency).
+  - `domain.py` & `connectivity.py`: Road network graph discovery (BFS) and generator placement candidate domain generator.
+  - `bridge.py`: JSON bridge interface used by Pyodide in-browser worker and CLI.
+- `src/api/solverClient.ts`: Asynchronous Web Worker client that loads `backend/blackout_csp/` modules directly into Pyodide in the browser without requiring a remote server.
+- `src/engine/`: Pure, deterministic TypeScript game engine with zero UI dependencies. Handles orthogonal road BFS, boundary calculations, capacity reports, activation states, and scoring.
+- `src/stores/`: Zustand store (`gameStore.ts`) connecting UI state with engine functions.
+- `src/components/`: Modular React components split into game grid (`GameGrid`), HUD (`GameHUD`), placement toolbar (`PlacementBar`), building sprites, level selector, and CSP modal (`SolverModal`).
 - `src/data/`: Data-driven JSON definitions for buildings (`buildings.json`) and campaign levels (`campaign/level-01.json` through `level-10.json`).
-- `python_csp/`: Standalone Python implementation of the level solver, CLI interface, and benchmarks.
 
 ---
 
@@ -116,7 +129,7 @@ python3 python_csp/benchmark.py
 ### Prerequisites
 
 - [Node.js](https://nodejs.org/) (v20+ LTS recommended)
-- [Python](https://www.python.org/) (3.10+ recommended for Python solver and benchmarks)
+- [Python](https://www.python.org/) (3.10+ recommended for backend CSP solver and benchmarks)
 - `npm` (or `pnpm`)
 
 ### 1. Clone & Install Dependencies
@@ -138,17 +151,14 @@ Open your browser and navigate to `http://localhost:5173`.
 ### 3. Run Verification & Test Suite
 
 ```bash
-# Run TypeScript unit tests (16 tests)
+# Run TypeScript unit tests (13 tests)
 npm test
 
-# Run Python solver unit tests
+# Run Python backend unit tests (17 tests)
 npm run test:python
 
-# Run TypeScript CSP Benchmark
+# Run Python CSP Benchmark across all 10 campaign levels
 npm run benchmark:csp
-
-# Run Python CSP Benchmark
-npm run benchmark:csp:py
 
 # Run TypeScript typecheck
 npm run typecheck
@@ -169,30 +179,39 @@ npm run build
 
 ```text
 blackout-city-game/
+├── backend/                  # Python CSP solver, consistency checkers, and benchmarks
+│   ├── blackout_csp/         # Core Python CSP package (imported in Python & Pyodide)
+│   │   ├── bridge.py         # JSON bridge for Pyodide worker and CLI
+│   │   ├── connectivity.py   # BFS road component detection & network graph
+│   │   ├── consistency.py    # k=1 (Node), k=2 (Arc/AC-3), k=3 (Path) consistency
+│   │   ├── csp_types.py      # Dataclasses and type definitions
+│   │   ├── domain.py         # Placement candidate generator & domain filtering
+│   │   ├── footprint.py      # Multi-tile footprint and boundary neighbor calculations
+│   │   ├── models.py         # Data models (BuildingDefinition, Level, Coordinate)
+│   │   ├── objectives.py     # Objective satisfaction and star evaluation
+│   │   └── solver.py         # 5 CSP algorithms: Backtracking, MRV, MRV+FC, MRV+NC, MRV+AC3
+│   ├── tests/                # Python unittests (test_solver, test_consistency, test_bridge)
+│   ├── benchmark_csp.py      # Benchmark runner across levels 1–10
+│   └── check_consistency.py  # Standalone consistency analyzer
 ├── docs/                     # Game specifications and architecture design
 │   └── blackout-city.md
-├── python_csp/               # Pure Python CSP solver and benchmark module
-│   ├── benchmark.py          # Academic benchmark script across levels 1-10
-│   ├── cli.py                # JSON CLI interface
-│   ├── solver.py             # Plain, MRV, and MRV+FC algorithm implementations
-│   └── test_solver.py        # Python unittest suite
 ├── public/
-│   ├── favicon.svg           # Yellow zap brand favicon
+│   ├── favicon.svg           # Brand favicon
 │   ├── icons/                # Game icon SVGs and hover assets
+│   ├── pyodide-worker.js     # Web Worker executing Python CSP solver via Pyodide
 │   └── resources/design/     # Design reference mockups & components
-├── scripts/
-│   └── benchmark-csp.ts      # TypeScript CLI benchmark script
 ├── src/
+│   ├── api/
+│   │   └── solverClient.ts   # Client wrapper communicating with Pyodide worker
 │   ├── assets/               # Bundled logos, icons, fonts
 │   ├── components/
 │   │   ├── game/             # Board grid, HUD, sprites, CSP modal, toolbar
 │   │   └── screens/          # Home & Level Selector screens
-│   ├── data/                 # JSON building definitions & campaign levels (1-10)
+│   ├── data/                 # JSON building definitions & campaign levels (1–10)
 │   │   ├── buildings.json
 │   │   └── campaign/
-│   ├── engine/               # Pure TypeScript engine
+│   ├── engine/               # Pure TypeScript game engine
 │   │   ├── connectivity/     # Orthogonal road networks & component IDs
-│   │   ├── csp/              # Pure TS CSP solver (Plain, MRV, MRV+FC)
 │   │   ├── grid/             # Footprint & boundary neighbor calculations
 │   │   ├── objectives/       # Objective evaluation & scoring rules
 │   │   ├── placement/        # Placement validation & generator actions
@@ -200,7 +219,7 @@ blackout-city-game/
 │   ├── stores/               # Zustand game store
 │   ├── styles/               # CSS variables and Day / Night theme tokens
 │   └── types/                # TypeScript interfaces & Zod schemas
-└── tests/                    # Vitest test suites (connectivity, simulation, levels, CSP)
+└── tests/                    # Vitest test suites (connectivity, simulation, levels, smoke)
 ```
 
 ---

@@ -286,6 +286,7 @@ export function solveCSPLevel(
         netId: string;
         deficit: number;
         count: number;
+        validIndices: number[];
       }[] = [];
       for (const comp of levelIndex.roadComponents) {
         const netId = comp.id;
@@ -313,6 +314,7 @@ export function solveCSPLevel(
           netId,
           deficit,
           count: validIndices.length,
+          validIndices,
         });
       }
 
@@ -321,11 +323,9 @@ export function solveCSPLevel(
         (a, b) => a.count - b.count || b.deficit - a.deficit,
       );
 
+      // Use the pruned domains (validIndices), not the raw candidate lists
       for (const item of networkPriorities) {
-        const list = netCandidatesMap.get(item.netId) ?? [];
-        for (const cIdx of list) {
-          if (cIdx >= minCandIndex) candidateIndices.push(cIdx);
-        }
+        for (const cIdx of item.validIndices) candidateIndices.push(cIdx);
       }
     }
 

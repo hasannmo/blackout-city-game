@@ -98,7 +98,6 @@ function ensureReady(): Promise<void> {
   return ready;
 }
 
-/** Panggil saat modal dibuka agar Pyodide sudah siap sebelum tombol ditekan. */
 export function preloadSolver(): Promise<void> {
   return ensureReady();
 }

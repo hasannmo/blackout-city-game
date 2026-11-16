@@ -11,10 +11,14 @@ Yujuan    : setelah generator ditempatkan, pilih subset bangunan yang dinyalakan
             (knapsack per jaringan) lalu cek objective; mode optimization mencari
             skor tertinggi, mode feasibility berhenti di solusi valid pertama.
 
-Tiga algoritma (urutan pemilihan kandidat berbeda):
+Lima algoritma (urutan pemilihan kandidat / pruning berbeda):
 1. backtracking          : kandidat berurutan index.
 2. mrv                   : jaringan dengan kandidat paling sedikit (Minimum Remaining Values) duluan.
 3. mrv_forward_checking  : MRV + pruning domain jaringan yang sudah cukup dayanya.
+4. mrv_nc                : MRV + k=1 (node consistency). Domain dibangun eksplisit dari
+                           seluruh sel grid lewat consistency.node_consistency, tanpa FC.
+5. mrv_ac3               : MRV + k=2 (node consistency + AC-3 di setiap node / MAC), tanpa FC.
+                           Kandidat generator berikutnya yang tidak arc-consistent dibuang.
 """
 
 from __future__ import annotations
@@ -25,6 +29,7 @@ from typing import Dict, List, Optional, Set, Tuple
 
 from .connectivity import LevelIndex
 from .csp_types import (
+    ALGORITHMS,
     BenchmarkStats,
     NetworkCapacity,
     PlacedGenerator,
@@ -33,6 +38,7 @@ from .csp_types import (
     SolverMode,
     SolverResult,
 )
+from .consistency import Domains, ac3, build_generator_csp, node_consistency
 from .domain import PlacementCandidate, get_connected_generator_candidates
 from .footprint import get_footprint_cells
 from .models import BuildingDefinition, BuildingInstance, Coordinate
@@ -78,9 +84,13 @@ class _CSPSearch:
         self.gen_def: BuildingDefinition = defs.get("generator") or DEFAULT_GENERATOR
         self.inventory_count: int = level_index.level.inventory.get("generator", 0)
 
-        self.candidates: List[PlacementCandidate] = get_connected_generator_candidates(
-            level_index, self.gen_def.width, self.gen_def.height
-        )
+        self.uses_consistency = algorithm in ("mrv_nc", "mrv_ac3")
+        if self.uses_consistency:
+            self.candidates = self._node_consistent_candidates()
+        else:
+            self.candidates: List[PlacementCandidate] = get_connected_generator_candidates(
+                level_index, self.gen_def.width, self.gen_def.height
+            )
 
         self.networks: List[_NetworkInfo] = []
         for comp in level_index.road_components:
@@ -115,6 +125,46 @@ class _CSPSearch:
         self.max_possible_score = sum(b.score for b in level_index.level.buildings)
 
         self._knapsack_cache: Dict[Tuple[str, int], Tuple[List[str], int]] = {}
+
+        self.ac3_vars = 0
+        if algorithm == "mrv_ac3":
+            self._setup_ac3()
+
+    def _node_consistent_candidates(self) -> List[PlacementCandidate]:
+        # k=1: mulai dari seluruh sel grid, buang yang melanggar constraint unary.
+        csp = build_generator_csp(self.level_index, 1)
+        nc = node_consistency(csp)
+        return [
+            PlacementCandidate(origin, next(iter(csp.touching_networks(origin))))
+            for origin in nc.domains[0]
+        ]
+
+    def _setup_ac3(self) -> None:
+        # Jumlah variabel = generator terbanyak yang masih bisa dipasang. Jika AC-3
+        # gagal (domain kosong) untuk n generator, n pasti tidak bisa dipasang semua.
+        origins = [c.origin for c in self.candidates]
+        n = min(self.inventory_count, len(origins))
+        while n > 0:
+            csp = build_generator_csp(self.level_index, n)
+            if ac3(csp, {v: list(origins) for v in range(n)}).consistent:
+                break
+            n -= 1
+        self.ac3_vars = n
+        self.ac3_csp = build_generator_csp(self.level_index, n)
+        self.ac3_origins = origins
+
+    def _ac3_allowed(self) -> Optional[Set[Coordinate]]:
+        """Domain generator berikutnya setelah AC-3, atau None jika ada domain kosong."""
+        placed = len(self.placements)
+        if placed >= self.ac3_vars:
+            return None
+        domains: Domains = {}
+        for v in range(self.ac3_vars):
+            domains[v] = [self.placements[v].origin] if v < placed else list(self.ac3_origins)
+        res = ac3(self.ac3_csp, domains)
+        if not res.consistent:
+            return None
+        return set(res.domains[placed])
 
     def _best_subset(self, info: _NetworkInfo, gen: int) -> Tuple[List[str], int]:
         key = (info.net_id, gen)
@@ -200,6 +250,12 @@ class _CSPSearch:
         ordered: List[int] = []
         for _, _, indices in priorities:
             ordered.extend(indices)
+
+        if self.algorithm == "mrv_ac3":
+            allowed = self._ac3_allowed()
+            if allowed is None:
+                return []
+            ordered = [i for i in ordered if self.candidates[i].origin in allowed]
         return ordered
 
     def _elapsed_ms(self) -> float:
@@ -292,7 +348,7 @@ def solve_csp_level(
 def run_csp_benchmark_comparison(
     level_index: LevelIndex, mode: SolverMode = "optimization"
 ) -> SolverResult:
-    algorithms: List[SolverAlgorithm] = ["backtracking", "mrv", "mrv_forward_checking"]
+    algorithms: List[SolverAlgorithm] = list(ALGORITHMS)
 
     comparison: List[BenchmarkStats] = []
     best: Optional[SolverResult] = None

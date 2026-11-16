@@ -6,7 +6,7 @@ export interface CSPPlacementCandidate {
 }
 
 export type CSPSolverAlgorithm =
-  "backtracking" | "mrv" | "mrv_forward_checking";
+  "backtracking" | "mrv" | "mrv_forward_checking" | "mrv_nc" | "mrv_ac3";
 export type CSPSolverMode = "feasibility" | "optimization";
 
 export interface CSPSolverOptions {

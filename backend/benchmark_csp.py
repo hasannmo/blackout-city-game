@@ -5,7 +5,7 @@ import csv
 from blackout_csp import build_level_index, solve_csp_level
 from blackout_csp.loader import load_all_levels, load_building_definitions
 
-ALGORITHMS = ["backtracking", "mrv", "mrv_forward_checking"]
+ALGORITHMS = ["backtracking", "mrv", "mrv_forward_checking", "mrv_nc", "mrv_ac3"]
 HEADER = ["Level", "Algorithm", "DurationMs", "NodesVisited", "Backtracks", "SolutionFound", "Score"]
 
 def main() -> None:

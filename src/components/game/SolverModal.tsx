@@ -125,7 +125,7 @@ export const SolverModal: React.FC<SolverModalProps> = ({
                   : "bg-white text-gray-600 hover:bg-gray-50"
               }`}
             >
-              <span>Compare All 3 CSP Algorithms</span>
+              <span>Compare All 5 CSP Algorithms</span>
               <span className="text-xs font-black">
                 {runComparison ? "ON" : "OFF"}
               </span>
@@ -133,13 +133,13 @@ export const SolverModal: React.FC<SolverModalProps> = ({
           </div>
         </div>
 
-        {/* Algorithm Selection (if not running all 3) */}
+        {/* Algorithm Selection (if not running all 5) */}
         {!runComparison && (
           <div className="flex flex-col gap-1 mb-4">
             <label className="text-xs font-black text-gray-700 uppercase">
               Algorithm Technique
             </label>
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <button
                 onClick={() => setAlgorithm("backtracking")}
                 className={`py-2 px-2 rounded-xl border-2 border-[var(--outline)] font-bold text-[11px] text-center transition ${
@@ -169,6 +169,26 @@ export const SolverModal: React.FC<SolverModalProps> = ({
                 }`}
               >
                 3. MRV + Forward Check
+              </button>
+              <button
+                onClick={() => setAlgorithm("mrv_nc")}
+                className={`py-2 px-2 rounded-xl border-2 border-[var(--outline)] font-bold text-[11px] text-center transition ${
+                  algorithm === "mrv_nc"
+                    ? "bg-amber-300 font-black"
+                    : "bg-white text-gray-600"
+                }`}
+              >
+                4. MRV + K=1 (Node)
+              </button>
+              <button
+                onClick={() => setAlgorithm("mrv_ac3")}
+                className={`col-span-2 py-2 px-2 rounded-xl border-2 border-[var(--outline)] font-bold text-[11px] text-center transition ${
+                  algorithm === "mrv_ac3"
+                    ? "bg-amber-300 font-black"
+                    : "bg-white text-gray-600"
+                }`}
+              >
+                5. MRV + K=2 (Arc / AC-3)
               </button>
             </div>
           </div>
@@ -229,7 +249,11 @@ export const SolverModal: React.FC<SolverModalProps> = ({
                               ? "Plain Backtracking"
                               : c.algorithm === "mrv"
                                 ? "MRV Heuristic"
-                                : "MRV + Forward Checking"}
+                                : c.algorithm === "mrv_nc"
+                                  ? "MRV + K=1 (Node)"
+                                  : c.algorithm === "mrv_ac3"
+                                    ? "MRV + K=2 (Arc / AC-3)"
+                                    : "MRV + Forward Checking"}
                           </td>
                           <td className="py-1.5 px-2 font-black text-amber-900">
                             {c.durationMs} ms

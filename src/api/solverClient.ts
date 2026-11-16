@@ -8,6 +8,7 @@ import type {
 import initPy from "../../backend/blackout_csp/__init__.py?raw";
 import bridgePy from "../../backend/blackout_csp/bridge.py?raw";
 import connectivityPy from "../../backend/blackout_csp/connectivity.py?raw";
+import consistencyPy from "../../backend/blackout_csp/consistency.py?raw";
 import cspTypesPy from "../../backend/blackout_csp/csp_types.py?raw";
 import domainPy from "../../backend/blackout_csp/domain.py?raw";
 import footprintPy from "../../backend/blackout_csp/footprint.py?raw";
@@ -19,6 +20,7 @@ const PYTHON_FILES: Record<string, string> = {
   "__init__.py": initPy,
   "bridge.py": bridgePy,
   "connectivity.py": connectivityPy,
+  "consistency.py": consistencyPy,
   "csp_types.py": cspTypesPy,
   "domain.py": domainPy,
   "footprint.py": footprintPy,

@@ -5,10 +5,10 @@ from typing import Any, Dict, List, Literal, Optional
 
 from .models import Coordinate
 
-SolverAlgorithm = Literal["backtracking", "mrv", "mrv_forward_checking"]
+SolverAlgorithm = Literal["backtracking", "mrv", "mrv_forward_checking", "mrv_nc", "mrv_ac3"]
 SolverMode = Literal["feasibility", "optimization"]
 
-ALGORITHMS = ("backtracking", "mrv", "mrv_forward_checking")
+ALGORITHMS = ("backtracking", "mrv", "mrv_forward_checking", "mrv_nc", "mrv_ac3")
 MODES = ("feasibility", "optimization")
 
 @dataclass

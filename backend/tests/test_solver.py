@@ -12,7 +12,7 @@ class CSPSolverTests(unittest.TestCase):
         index = build_level_index(load_level(1), self.defs)
         results = {
             algo: solve_csp_level(index, algorithm=algo, mode="feasibility")
-            for algo in ("backtracking", "mrv", "mrv_forward_checking")
+            for algo in ("backtracking", "mrv", "mrv_forward_checking", "mrv_nc", "mrv_ac3")
         }
         for algo, res in results.items():
             with self.subTest(algo=algo):
@@ -24,7 +24,7 @@ class CSPSolverTests(unittest.TestCase):
         index = build_level_index(load_level(2), self.defs)
         comp = run_csp_benchmark_comparison(index, "optimization")
         self.assertIsNotNone(comp.comparison)
-        self.assertEqual(len(comp.comparison), 3)
+        self.assertEqual(len(comp.comparison), 5)
         for stats in comp.comparison:
             self.assertTrue(stats.solution_found)
             self.assertGreater(stats.score, 0)

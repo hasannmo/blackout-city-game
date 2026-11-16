@@ -21,9 +21,9 @@ class BridgeTests(unittest.TestCase):
         self.assertEqual(out["result"]["stats"]["score"], 80)
         self.assertEqual(out["result"]["solution"]["stars"], 3)
 
-    def test_compare_returns_three_stats(self):
+    def test_compare_returns_all_algorithms(self):
         out = solve_request({"level": self.level, "buildingDefinitions": self.defs, "compare": True})
-        self.assertEqual(len(out["comparison"]), 3)
+        self.assertEqual(len(out["comparison"]), 5)
 
     def test_errors_are_returned_not_raised(self):
         for text in ("bukan json", "[]", json.dumps({"buildingDefinitions": self.defs}),

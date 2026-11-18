@@ -9,12 +9,7 @@
 
 ## 1. Project Overview
 
-Blackout City is a single-player, grid-based puzzle game in which the
-player restores electricity to a city. Each level has a fixed road
-layout, fixed buildings, and a limited inventory of generators. The
-player places generators beside the road networks, chooses which
-buildings to power, and then runs a simulation that evaluates the
-result against the level's objectives.
+Blackout City is a single-player grid puzzle where players are tasked with bringing power back to a city. Every stage features a static layout of roads and buildings alongside a restricted supply of generators. To succeed, players must position generators adjacent to the road grid, select target buildings to energize, and execute a simulation to verify whether their setup meets the stage's goals.
 
 Each attempt at a level follows three phases:
 
